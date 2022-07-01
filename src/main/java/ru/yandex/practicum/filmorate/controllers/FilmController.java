@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -50,12 +49,21 @@ public class FilmController {
         return f;
     }
 
+    @DeleteMapping("/films")
+    public void clear() {
+        films.clear();
+        id = 1;
+    }
+
     private boolean checkFilm(Film f) {
         if (f == null ||
+                f.getName() == null ||
+                f.getDescription() == null ||
+                f.getReleaseDate() == null ||
                 f.getName().isBlank() ||
                 f.getDescription().length() > 200 ||
                 f.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28)) ||
-                f.getDuration() < 0
+                f.getDuration() <= 0
         )
             return false;
         else

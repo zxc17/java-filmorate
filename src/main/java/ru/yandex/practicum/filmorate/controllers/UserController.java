@@ -47,15 +47,24 @@ public class UserController {
         return u;
     }
 
+    @DeleteMapping("/users")
+    public void clear() {
+        users.clear();
+        id = 1;
+    }
+
     private boolean checkUser(User u) {
         if (u == null ||
+                u.getLogin() == null ||
+                u.getEmail() == null ||
+                u.getBirthday() == null ||
                 u.getEmail().isBlank() || !u.getEmail().contains("@") ||
                 u.getLogin().isBlank() || u.getLogin().contains(" ") ||
                 u.getBirthday().isAfter(LocalDate.now())
         )
             return false;
         else {
-            if (u.getName().isBlank())
+            if (u. getName() == null || u.getName().isBlank())
                 u.setName(u.getLogin());
             return true;
         }
