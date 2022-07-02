@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +57,6 @@ class UserControllerTest {
 
     @Test
     public void userCreateFailLogin() throws Exception {
-        MvcResult mvcResult;
         User user = new User();
         user.setEmail("z@mail.ru");
         user.setBirthday(LocalDate.of(2000, 8, 20));
@@ -81,7 +79,6 @@ class UserControllerTest {
 
     @Test
     public void userCreateFailEmail() throws Exception {
-        MvcResult mvcResult;
         User user = new User();
         user.setLogin("login");
         user.setBirthday(LocalDate.of(2000, 8, 20));
@@ -104,7 +101,6 @@ class UserControllerTest {
 
     @Test
     public void userCreateFailBirthday() throws Exception {
-        MvcResult mvcResult;
         User user = new User();
         user.setLogin("login");
         user.setEmail("email@mail.ru");
@@ -120,7 +116,6 @@ class UserControllerTest {
 
     @Test
     public void userUpdateWrongId() throws Exception {
-        MvcResult mvcResult;
         User user = new User();
         String login = "login";
         String email = "email@mail.ru";
