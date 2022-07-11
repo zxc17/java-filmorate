@@ -53,8 +53,9 @@ public class FilmService {
             throw new ValidationDataException("Некорректные данные фильма.");
         }
         if (filmStorage.getFilm(f.getId()) == null) {
-            log.warn("Невозможно обновить данные фильма, ID не найден.");
-            throw new ValidationNotFoundException("Невозможно обновить данные фильма, ID не найден.");
+            log.warn("Невозможно обновить данные фильма, id={} не найден.", f.getId());
+            throw new ValidationNotFoundException(
+                    String.format("Невозможно обновить данные фильма, id=%s не найден.", f.getId()));
         }
         return filmStorage.updateFilm(f);
     }

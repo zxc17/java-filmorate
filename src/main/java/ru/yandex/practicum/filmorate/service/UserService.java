@@ -49,8 +49,9 @@ public class UserService {
             throw new ValidationDataException("Некорректные данные пользователя.");
         }
         if (userStorage.getUser(u.getId()) == null) {
-            log.warn("Невозможно обновить данные пользователя, ID не найден.");
-            throw new ValidationNotFoundException("Невозможно обновить данные пользователя, ID не найден.");
+            log.warn("Невозможно обновить данные пользователя, id={} не найден.", u.getId());
+            throw new ValidationNotFoundException(
+                    String.format("Невозможно обновить данные пользователя, id=%s не найден.", u.getId()));
         }
         return userStorage.updateUser(u);
     }

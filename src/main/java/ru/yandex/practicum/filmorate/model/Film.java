@@ -25,5 +25,4 @@ public class Film {
     @Size(min = 1)
     private long duration;
     private Set<Long> likes = new HashSet<>();
-
 }

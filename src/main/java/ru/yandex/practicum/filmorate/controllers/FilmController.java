@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -51,6 +50,7 @@ public class FilmController {
     public void removeLike(@PathVariable long id, @PathVariable long userId) {
         filmService.removeLike(id, userId);
     }
+
     @GetMapping("/films/popular")
     public List<Film> getPopularFilmList(@RequestParam(defaultValue = "10", required = false) long count) {
         return filmService.getPopularFilmList(count);
