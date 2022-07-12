@@ -26,12 +26,8 @@ public class FilmService {
         this.userStorage = userStorage;
     }
 
-    public List<Film> getFilmList() {
-        return filmStorage.getFilmList();
-    }
-
-    public Film getFilm(long filmId) {
-        Film film = filmStorage.getFilm(filmId);
+    public Film get(long filmId) {
+        Film film = filmStorage.get(filmId);
         if (film == null) {
             log.warn("filmId={} не найден.", filmId);
             throw new ValidationNotFoundException(String.format("filmId=%s не найден.", filmId));
@@ -39,25 +35,37 @@ public class FilmService {
         return film;
     }
 
-    public Film addFilm(Film f) {
-        if (!checkFilm(f)) {
+    public Film add(Film f) {
+        if (!check(f)) {
             log.warn("Некорректные данные фильма.");
             throw new ValidationDataException("Некорректные данные фильма.");
         }
-        return filmStorage.addFilm(f);
+        return filmStorage.add(f);
     }
 
-    public Film updateFilm(Film f) {
-        if (!checkFilm(f)) {
+    public Film update(Film f) {
+        if (!check(f)) {
             log.warn("Некорректные данные фильма.");
             throw new ValidationDataException("Некорректные данные фильма.");
         }
-        if (filmStorage.getFilm(f.getId()) == null) {
+        if (filmStorage.get(f.getId()) == null) {
             log.warn("Невозможно обновить данные фильма, id={} не найден.", f.getId());
             throw new ValidationNotFoundException(
                     String.format("Невозможно обновить данные фильма, id=%s не найден.", f.getId()));
         }
-        return filmStorage.updateFilm(f);
+        return filmStorage.update(f);
+    }
+
+    public void remove(long id) {
+        if (filmStorage.get(id) == null) {
+            log.warn("filmId={} не найден.", id);
+            throw new ValidationNotFoundException(String.format("filmId=%s не найден.", id));
+        }
+        filmStorage.remove(id);
+    }
+
+    public List<Film> getList() {
+        return filmStorage.getList();
     }
 
     public void clear() {
@@ -65,12 +73,12 @@ public class FilmService {
     }
 
     public void addLike(long filmId, long userId) {
-        Film film = filmStorage.getFilm(filmId);
+        Film film = filmStorage.get(filmId);
         if (film == null) {
             log.warn("filmId={} не найден.", filmId);
             throw new ValidationNotFoundException(String.format("filmId=%s не найден.", filmId));
         }
-        if (userStorage.getUser(userId) == null) {
+        if (userStorage.get(userId) == null) {
             log.warn("userId={} не найден.", userId);
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
         }
@@ -78,7 +86,7 @@ public class FilmService {
     }
 
     public void removeLike(long filmId, long userId) {
-        Film film = filmStorage.getFilm(filmId);
+        Film film = filmStorage.get(filmId);
         if (film == null) {
             log.warn("filmId={} не найден.", filmId);
             throw new ValidationNotFoundException(String.format("filmId=%s не найден.", filmId));
@@ -90,17 +98,17 @@ public class FilmService {
     }
 
     public long getLikeCount(long id) {
-        return filmStorage.getFilm(id).getLikes().size();
+        return filmStorage.get(id).getLikes().size();
     }
 
     public List<Film> getPopularFilmList(long count) {
-        return filmStorage.getFilmList().stream()
+        return filmStorage.getList().stream()
                 .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
     }
 
-    private boolean checkFilm(Film f) {
+    private boolean check(Film f) {
         if (f == null ||
                 f.getName() == null ||
                 f.getDescription() == null ||

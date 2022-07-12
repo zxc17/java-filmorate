@@ -5,13 +5,14 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.util.List;
 
 public interface FilmStorage {
-    List<Film> getFilmList();
+    Film update(Film f);
 
-    Film updateFilm(Film f);
+    Film add(Film f);
 
-    Film addFilm(Film f);
+    Film get(long id);
+
+    void remove(long id);
+    List<Film> getList();
 
     void clear();
-
-    Film getFilm(long id);
 }

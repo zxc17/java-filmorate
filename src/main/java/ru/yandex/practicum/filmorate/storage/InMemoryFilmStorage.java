@@ -16,12 +16,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     private long id = 1;
 
     @Override
-    public List<Film> getFilmList() {
-        return new ArrayList<>(films.values());
-    }
-
-    @Override
-    public Film addFilm(Film f) {
+    public Film add(Film f) {
         f.setId(id++);
         films.put(f.getId(), f);
         log.info("Фильм id={} успешно добавлен.", f.getId());
@@ -29,10 +24,21 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film updateFilm(Film f) {
+    public Film update(Film f) {
         films.put(f.getId(), f);
         log.info("Данные фильма id={} успешно обновлены.", f.getId());
         return f;
+    }
+
+    @Override
+    public void remove(long id) {
+        films.remove(id);
+        log.info("Фильм id={} успешно удален.", id);
+    }
+
+    @Override
+    public List<Film> getList() {
+        return new ArrayList<>(films.values());
     }
 
     @Override
@@ -42,7 +48,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilm(long id) {
+    public Film get(long id) {
         return films.get(id);
     }
 

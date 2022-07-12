@@ -22,12 +22,33 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public List<User> getUserList() {
-        return userStorage.getUserList();
+    public List<User> getList() {
+        return userStorage.getList();
     }
 
-    public User getUser(long userId) {
-        User user = userStorage.getUser(userId);
+    public User add(User u) {
+        if (!checkUser(u)) {
+            log.warn("Некорректные данные пользователя.");
+            throw new ValidationDataException("Некорректные данные пользователя.");
+        }
+        return userStorage.add(u);
+    }
+
+    public User update(User u) {
+        if (!checkUser(u)) {
+            log.warn("Некорректные данные пользователя.");
+            throw new ValidationDataException("Некорректные данные пользователя.");
+        }
+        if (userStorage.get(u.getId()) == null) {
+            log.warn("Невозможно обновить данные пользователя, id={} не найден.", u.getId());
+            throw new ValidationNotFoundException(
+                    String.format("Невозможно обновить данные пользователя, id=%s не найден.", u.getId()));
+        }
+        return userStorage.update(u);
+    }
+
+    public User get(long userId) {
+        User user = userStorage.get(userId);
         if (user == null) {
             log.warn("userId={} не найден.", userId);
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
@@ -35,25 +56,12 @@ public class UserService {
         return user;
     }
 
-    public User addUser(User u) {
-        if (!checkUser(u)) {
-            log.warn("Некорректные данные пользователя.");
-            throw new ValidationDataException("Некорректные данные пользователя.");
+    public void remove(long id) {
+        if (userStorage.get(id) == null) {
+            log.warn("userId={} не найден.", id);
+            throw new ValidationNotFoundException(String.format("userId=%s не найден.", id));
         }
-        return userStorage.addUser(u);
-    }
-
-    public User updateUser(User u) {
-        if (!checkUser(u)) {
-            log.warn("Некорректные данные пользователя.");
-            throw new ValidationDataException("Некорректные данные пользователя.");
-        }
-        if (userStorage.getUser(u.getId()) == null) {
-            log.warn("Невозможно обновить данные пользователя, id={} не найден.", u.getId());
-            throw new ValidationNotFoundException(
-                    String.format("Невозможно обновить данные пользователя, id=%s не найден.", u.getId()));
-        }
-        return userStorage.updateUser(u);
+        userStorage.remove(id);
     }
 
     public void clear() {
@@ -61,12 +69,12 @@ public class UserService {
     }
 
     public void addFriend(long userId, long friendId) {
-        User user = userStorage.getUser(userId);
+        User user = userStorage.get(userId);
         if (user == null) {
             log.warn("userId={} не найден.", userId);
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
         }
-        User friend = userStorage.getUser(friendId);
+        User friend = userStorage.get(friendId);
         if (friend == null) {
             log.warn("friendId={} не найден.", friendId);
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
@@ -76,12 +84,12 @@ public class UserService {
     }
 
     public void removeFriend(long userId, long friendId) {
-        User user = userStorage.getUser(userId);
+        User user = userStorage.get(userId);
         if (user == null) {
             log.warn("userId={} не найден.", userId);
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
         }
-        User friend = userStorage.getUser(friendId);
+        User friend = userStorage.get(friendId);
         if (friend == null) {
             log.warn("friendId={} не найден.", friendId);
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
@@ -91,33 +99,33 @@ public class UserService {
     }
 
     public List<User> getFriendList(long userId) {
-        User user = userStorage.getUser(userId);
+        User user = userStorage.get(userId);
         if (user == null) {
             log.warn("userId={} не найден.", userId);
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
         }
         List<User> result = new ArrayList<>();
         for (Long id : user.getFriends()) {
-            result.add(userStorage.getUser(id));
+            result.add(userStorage.get(id));
         }
         return result;
     }
 
     public List<User> getMutualFriendList(long userId, long friendId) {
         List<User> result = new ArrayList<>();
-        User user = userStorage.getUser(userId);
+        User user = userStorage.get(userId);
         if (user == null) {
             log.warn("userId={} не найден.", userId);
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
         }
-        User friend = userStorage.getUser(friendId);
+        User friend = userStorage.get(friendId);
         if (friend == null) {
             log.warn("friendId={} не найден.", friendId);
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
         }
         for(long id : user.getFriends()) {
             if (friend.getFriends().contains(id))
-                result.add(userStorage.getUser(id));
+                result.add(userStorage.get(id));
         }
         return result;
     }
