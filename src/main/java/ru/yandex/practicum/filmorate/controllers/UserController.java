@@ -16,29 +16,24 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/users")
-    public User add(@RequestBody User u) {
-        return userService.add(u);
-    }
-
-    @PutMapping("/users")
-    public User update(@RequestBody User u) {
-        return userService.update(u);
+    @GetMapping("/users")
+    public List<User> getUserList() {
+        return userService.getUserList();
     }
 
     @GetMapping("/users/{id}")
-    public User get(@PathVariable long id) {
-        return userService.get(id);
+    public User getUser(@PathVariable long id) {
+        return userService.getUser(id);
     }
 
-    @DeleteMapping(("/users/{id}"))
-    public void remove(@PathVariable long id) {
-        userService.remove(id);
+    @PostMapping("/users")
+    public User addUser(@RequestBody User u) {
+        return userService.addUser(u);
     }
 
-    @GetMapping("/users")
-    public List<User> getList() {
-        return userService.getList();
+    @PutMapping("/users")
+    public User updateUser(@RequestBody User u) {
+        return userService.updateUser(u);
     }
 
     @DeleteMapping("/users")

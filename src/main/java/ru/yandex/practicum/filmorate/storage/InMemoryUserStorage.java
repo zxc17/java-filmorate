@@ -16,7 +16,12 @@ public class InMemoryUserStorage implements UserStorage {
     private long id = 1;
 
     @Override
-    public User add(User u) {
+    public List<User> getUserList() {
+        return new ArrayList<>(users.values());
+    }
+
+    @Override
+    public User addUser(User u) {
         u.setId(id++);
         users.put(u.getId(), u);
         log.info("Пользователь id={} успешно добавлен.", u.getId());
@@ -24,32 +29,21 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User update(User u) {
+    public User updateUser(User u) {
         users.put(u.getId(), u);
         log.info("Данные пользователя id={} успешно обновлены.", u.getId());
         return u;
     }
 
     @Override
-    public User get(long id) {
-        return users.get(id);
-    }
-
-    @Override
-    public void remove(long id) {
-        users.remove(id);
-        log.info("Пользователь id={} успешно удален.", id);
-    }
-
-    @Override
-    public List<User> getList() {
-        return new ArrayList<>(users.values());
-    }
-
-    @Override
     public void clear() {
         users.clear();
         id = 1;
+    }
+
+    @Override
+    public User getUser(long id) {
+        return users.get(id);
     }
 
 
