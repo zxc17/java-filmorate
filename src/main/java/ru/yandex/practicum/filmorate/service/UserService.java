@@ -1,66 +1,57 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FriendsStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-@Slf4j
+@RequiredArgsConstructor
 public class UserService {
-    UserStorage userStorage;
-
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
-
-    public List<User> getList() {
-        return userStorage.getList();
-    }
+    final UserStorage userStorage;
+    final FriendsStorage friendsStorage;
 
     public User add(User u) {
-        if (!checkUser(u)) {
-            log.warn("Некорректные данные пользователя.");
-            throw new ValidationDataException("Некорректные данные пользователя.");
-        }
-        return userStorage.add(u);
+        if (!isValidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
+        userStorage.add(u);
+        if (u.getFriends() != null)
+            friendsStorage.update(u.getId(), u.getFriends());
+        return u;
     }
 
     public User update(User u) {
-        if (!checkUser(u)) {
-            log.warn("Некорректные данные пользователя.");
-            throw new ValidationDataException("Некорректные данные пользователя.");
-        }
-        if (userStorage.get(u.getId()) == null) {
-            log.warn("Невозможно обновить данные пользователя, id={} не найден.", u.getId());
-            throw new ValidationNotFoundException(
-                    String.format("Невозможно обновить данные пользователя, id=%s не найден.", u.getId()));
-        }
-        return userStorage.update(u);
+        if (!isValidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
+        if (userStorage.get(u.getId()) == null) throw new ValidationNotFoundException(
+                String.format("Невозможно обновить данные пользователя, id=%s не найден.", u.getId()));
+        userStorage.update(u);
+        if (u.getFriends() != null)
+            friendsStorage.update(u.getId(), u.getFriends());
+        return u;
     }
 
     public User get(long userId) {
         User user = userStorage.get(userId);
-        if (user == null) {
-            log.warn("userId={} не найден.", userId);
-            throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
-        }
+        if (user == null) throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
+        user.setFriends(friendsStorage.getList(userId));
         return user;
     }
 
+    public List<User> getAll() {
+        List<User> result = userStorage.getAll();
+        result.forEach(user -> user.setFriends(friendsStorage.getList(user.getId())));
+        return result;
+    }
+
     public void remove(long id) {
-        if (userStorage.get(id) == null) {
-            log.warn("userId={} не найден.", id);
+        if (userStorage.get(id) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", id));
-        }
         userStorage.remove(id);
     }
 
@@ -69,68 +60,44 @@ public class UserService {
     }
 
     public void addFriend(long userId, long friendId) {
-        User user = userStorage.get(userId);
-        if (user == null) {
-            log.warn("userId={} не найден.", userId);
+        if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
-        }
-        User friend = userStorage.get(friendId);
-        if (friend == null) {
-            log.warn("friendId={} не найден.", friendId);
+        if (userStorage.get(friendId) == null)
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
-        }
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        friendsStorage.add(userId, friendId);
     }
 
     public void removeFriend(long userId, long friendId) {
-        User user = userStorage.get(userId);
-        if (user == null) {
-            log.warn("userId={} не найден.", userId);
+        if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
-        }
-        User friend = userStorage.get(friendId);
-        if (friend == null) {
-            log.warn("friendId={} не найден.", friendId);
+        if (userStorage.get(friendId) == null)
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
-        }
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        friendsStorage.remove(userId, friendId);
     }
 
     public List<User> getFriendList(long userId) {
-        User user = userStorage.get(userId);
-        if (user == null) {
-            log.warn("userId={} не найден.", userId);
+        if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
-        }
-        List<User> result = new ArrayList<>();
-        for (Long id : user.getFriends()) {
-            result.add(userStorage.get(id));
-        }
+        List<User> result = friendsStorage.getList(userId).stream()
+                .map(userStorage::get)
+                .collect(Collectors.toList());
+        result.forEach(user -> user.setFriends(friendsStorage.getList(user.getId())));
         return result;
     }
 
-    public List<User> getMutualFriendList(long userId, long friendId) {
-        List<User> result = new ArrayList<>();
-        User user = userStorage.get(userId);
-        if (user == null) {
-            log.warn("userId={} не найден.", userId);
+    public List<User> getCommonFriendList(long userId, long friendId) {
+        if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
-        }
-        User friend = userStorage.get(friendId);
-        if (friend == null) {
-            log.warn("friendId={} не найден.", friendId);
+        if (userStorage.get(friendId) == null)
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
-        }
-        for(long id : user.getFriends()) {
-            if (friend.getFriends().contains(id))
-                result.add(userStorage.get(id));
-        }
+        List<User> result = friendsStorage.getCommonFriendList(userId, friendId).stream()
+                .map(userStorage::get)
+                .collect(Collectors.toList());
+        result.forEach(user -> user.setFriends(friendsStorage.getList(user.getId())));
         return result;
     }
 
-    private boolean checkUser(User u) {
+    private boolean isValidUser(User u) {
         if (u == null ||
                 u.getLogin() == null ||
                 u.getEmail() == null ||
@@ -141,7 +108,7 @@ public class UserService {
         )
             return false;
         else {
-            if (u. getName() == null || u.getName().isBlank())
+            if (u.getName() == null || u.getName().isBlank())
                 u.setName(u.getLogin());
             return true;
         }
