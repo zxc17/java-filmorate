@@ -38,7 +38,7 @@ public class UserController {
 
     @GetMapping("/users")
     public List<User> getList() {
-        return userService.getList();
+        return userService.getAll();
     }
 
     @DeleteMapping("/users")
@@ -62,7 +62,7 @@ public class UserController {
     }
 
     @GetMapping("/users/{id}/friends/common/{otherId}")
-    public List<User> getMutualFriendList(@PathVariable long id, @PathVariable long otherId) {
-        return userService.getMutualFriendList(id, otherId);
+    public List<User> getCommonFriendList(@PathVariable long id, @PathVariable long otherId) {
+        return userService.getCommonFriendList(id, otherId);
     }
 }
