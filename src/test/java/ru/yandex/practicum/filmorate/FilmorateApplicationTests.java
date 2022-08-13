@@ -634,6 +634,17 @@ class FilmorateApplicationTests {
         assertEquals(10, j.get(9).getAsJsonObject().get("id").getAsInt());
     }
 
+    @Test
+    @Order(320)
+    void updateUserWithFriends() throws Exception {
+        // На начало теста у юзера 1 есть друг 2.
+        assertEquals(new HashSet<>(Set.of(2L)), userService.get(1).getFriends());
+        user1Updated.setFriends(new HashSet<>(Set.of(1L, 3L)));
+        mockPerfomPut("/users", user1Updated)
+                .andExpect(status().isOk());
+        assertEquals(new HashSet<>(Set.of(1L, 3L)), userService.get(1).getFriends());
+    }
+
 
     @Test
     @Order(1000)

@@ -7,13 +7,11 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.customExceptions.StorageException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
-import java.io.FileReader;
-import java.nio.file.Paths;
-import java.sql.*;
-import java.util.Iterator;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -37,44 +35,8 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
 
     @Override
     public void update(long filmId, Set<Genre> genres) {
-        if (genres == null)
-            throw new StorageException("Ошибка при внутреннем запросе обновления жанров. Отсутствует список.");
-        Properties properties = new Properties();
-        String url, login, password;
-        try {
-            properties.load(new FileReader(
-                    Paths.get("src", "main", "resources", "application.properties").toFile()));
-            url = properties.getProperty("spring.datasource.url");
-            login = properties.getProperty("spring.datasource.username");
-            password = properties.getProperty("spring.datasource.password");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        try (Connection connection = DriverManager.getConnection(url, login, password);
-             Statement statement = connection.createStatement())
-        {
-            connection.setAutoCommit(false);
-            statement.addBatch(String.format("delete from FILM_GENRE where FILM_ID = %s", filmId));
-            if (genres.size() > 0) {
-                StringBuilder sql = new StringBuilder("insert into FILM_GENRE (FILM_ID, GENRE_ID) values ");
-                Iterator<Genre> i = genres.iterator();
-                do {
-                    long genreId = i.next().getId();
-                    sql.append(String.format("(%s, %s)", filmId, genreId));
-                    if (i.hasNext())
-                        sql.append(", ");
-                    else {
-                        sql.append(";");
-                        break;
-                    }
-                } while (true);
-                statement.addBatch(sql.toString());
-            }
-            statement.executeBatch();
-            connection.commit();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        dbStorageUtil.updateTable("FILM_GENRE", "FILM_ID", filmId,
+                "GENRE_ID", genres.stream().map(Genre::getId).collect(Collectors.toSet()));
     }
 
     @Override

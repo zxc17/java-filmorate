@@ -6,16 +6,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.customExceptions.StorageException;
 
-import java.io.FileReader;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Properties;
 import java.util.Set;
 
 @Component
@@ -39,43 +32,7 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public void update(long userId, Set<Long> friendsIds) {
-        if (friendsIds == null)
-            throw new StorageException("Ошибка при внутреннем запросе обновления друзей. Отсутствует список.");
-        Properties properties = new Properties();
-        String url, login, password;
-        try {
-            properties.load(new FileReader(
-                    Paths.get("src", "main", "resources", "application.properties").toFile()));
-            url = properties.getProperty("spring.datasource.url");
-            login = properties.getProperty("spring.datasource.username");
-            password = properties.getProperty("spring.datasource.password");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        try (Connection connection = DriverManager.getConnection(url, login, password);
-             Statement statement = connection.createStatement()) {
-            connection.setAutoCommit(false);
-            statement.addBatch(String.format("delete from FRIENDS where USER_ID = %s", userId));
-            if (friendsIds.size() > 0) {
-                StringBuilder sql = new StringBuilder("insert into FILM_GENRE (FILM_ID, GENRE_ID) values ");
-                Iterator<Long> i = friendsIds.iterator();
-                do {
-                    long friendId = i.next();
-                    sql.append(String.format("(%s, %s)", userId, friendId));
-                    if (i.hasNext())
-                        sql.append(", ");
-                    else {
-                        sql.append(";");
-                        break;
-                    }
-                } while (true);
-                statement.addBatch(sql.toString());
-            }
-            statement.executeBatch();
-            connection.commit();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        dbStorageUtil.updateTable("FRIENDS", "USER_ID", userId, "FRIEND_ID", friendsIds);
     }
 
     @Override

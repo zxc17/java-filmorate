@@ -64,12 +64,7 @@ public class FilmDbStorage implements FilmStorage {
                 f.getName(), f.getDescription(), f.getReleaseDate(), f.getDuration(), f.getMpa().getId(),
                 f.getId()) == 0)
             throw new StorageException(String.format("Ошибка при обновлении данных в БД FILMS, id=%s.", f.getId()));
-        sql = "delete from FILM_GENRE where FILM_ID = ? ";
-        jdbcTemplate.update(sql, f.getId());
-        // Обновление жанров вызывается отдельно из родительского метода, обрабатывается FilmGenreStorage.
-//        sql = "insert into FILM_GENRE (FILM_ID, GENRE_ID) values (?, ?)";
-//        for (Genre g : f.getGenres())
-//            jdbcTemplate.update(sql, f.getId(), g.getId());
+        // Обновление жанров вызывается отдельно из модуля "сервис", обрабатывается FilmGenreStorage.
         return f;
     }
 
