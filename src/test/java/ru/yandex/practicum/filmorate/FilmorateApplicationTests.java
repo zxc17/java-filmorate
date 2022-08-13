@@ -18,12 +18,16 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Интеграционный тест.
  */
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -42,17 +47,22 @@ class FilmorateApplicationTests {
     private final MockMvc mockMvc;
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final UserService userService;
+    private final FilmService filmService;
     private MvcResult mvcResult;
     private final User user1, user2, user3, user4, user5, user1Updated;
     private final Film film1, film2, film3, film4, film5, film1Updated;
 
     @Autowired
     public FilmorateApplicationTests(ObjectMapper objectMapper, MockMvc mockMvc,
-                                     FilmStorage filmStorage, UserStorage userStorage) {
+                                     FilmStorage filmStorage, UserStorage userStorage,
+                                     UserService userService, FilmService filmService) {
         this.objectMapper = objectMapper;
         this.mockMvc = mockMvc;
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.userService = userService;
+        this.filmService = filmService;
         user1 = createUser(0, "login1", "name1", "user1@ya.ru", LocalDate.of(1999, 2, 1));
         user2 = createUser(0, "login2", "name2", "user2@ya.ru", LocalDate.of(1999, 2, 2));
         user3 = createUser(0, "login3", "name3", "user3@ya.ru", LocalDate.of(1999, 2, 3));
@@ -68,25 +78,27 @@ class FilmorateApplicationTests {
     }
 
     private User createUser(long id, String login, String name, String email, LocalDate birthday) {
-        User user = new User();
-        user.setId(id);
-        user.setLogin(login);
-        user.setName(name);
-        user.setEmail(email);
-        user.setBirthday(birthday);
-        user.setFriends(new HashSet<>());
-        return user;
+        return User.builder()
+                .id(id)
+                .login(login)
+                .name(name)
+                .email(email)
+                .birthday(birthday)
+                .friends(new LinkedHashSet<>())
+                .build();
     }
 
     private Film createFilm(long id, String name, String description, LocalDate releaseDate, long duration) {
-        Film film = new Film();
-        film.setId(id);
-        film.setName(name);
-        film.setDescription(description);
-        film.setReleaseDate(releaseDate);
-        film.setDuration(duration);
-        film.setLikes(new HashSet<>());
-        return film;
+        return Film.builder()
+                .id(id)
+                .name(name)
+                .description(description)
+                .releaseDate(releaseDate)
+                .duration(duration)
+                .mpa(Mpa.builder().id(1).name("G").build())
+                .genres(new LinkedHashSet<>())
+                .likes(new LinkedHashSet<>())
+                .build();
     }
 
     private ResultActions mockPerfomPost(String path, Object o) throws Exception {
@@ -141,12 +153,12 @@ class FilmorateApplicationTests {
         user4.setId(4);
         user5.setId(5);
         //Проверяем напрямую в базе
-        assertEquals(5, userStorage.getList().size());
-        assertEquals(user1, userStorage.get(1));
-        assertEquals(user2, userStorage.get(2));
-        assertEquals(user3, userStorage.get(3));
-        assertEquals(user4, userStorage.get(4));
-        assertEquals(user5, userStorage.get(5));
+        assertEquals(5, userStorage.getAll().size());
+        assertEquals(user1, userService.get(1));
+        assertEquals(user2, userService.get(2));
+        assertEquals(user3, userService.get(3));
+        assertEquals(user4, userService.get(4));
+        assertEquals(user5, userService.get(5));
     }
 
     @Test
@@ -280,10 +292,10 @@ class FilmorateApplicationTests {
         mockPerfomPut("/users/4/friends/2", null)
                 .andExpect(status().isOk());
         // Проверяем всех напрямую в базе.
-        assertEquals(new HashSet<>(Set.of(2L, 3L)), userStorage.get(1).getFriends());
-        assertEquals(new HashSet<>(Set.of(1L, 4L)), userStorage.get(2).getFriends());
-        assertEquals(new HashSet<>(Set.of(1L)), userStorage.get(3).getFriends());
-        assertEquals(new HashSet<>(Set.of(2L)), userStorage.get(4).getFriends());
+        assertEquals(new HashSet<>(Set.of(2L, 3L)), userService.get(1).getFriends());
+        assertTrue(userService.get(2).getFriends().isEmpty());
+        assertTrue(userService.get(3).getFriends().isEmpty());
+        assertEquals(new HashSet<>(Set.of(2L)), userService.get(4).getFriends());
         // Проверяем первого юзера через GET-запрос.
         mvcResult = mockPerfomGet("/users/1")
                 .andExpect(status().isOk())
@@ -310,7 +322,7 @@ class FilmorateApplicationTests {
 
     @Test
     @Order(110)
-    void getMutualFriendListOK() throws Exception {
+    void getCommonFriendListOK() throws Exception {
         mvcResult = mockPerfomGet("/users/1/friends/common/4")
                 .andExpect(status().isOk())
                 .andReturn();
@@ -325,7 +337,7 @@ class FilmorateApplicationTests {
 
     @Test
     @Order(115)
-    void getMutualFriendListFailID() throws Exception {
+    void getCommonFriendListFailID() throws Exception {
         mvcResult = mockPerfomGet("/users/17/friends/common/44")
                 .andExpect(status().isNotFound())
                 .andReturn();
@@ -345,10 +357,10 @@ class FilmorateApplicationTests {
         mockPerfomDelete("/users/1/friends/3")
                 .andExpect(status().isOk());
         // Проверяем всех напрямую в базе.
-        assertEquals(new HashSet<>(Set.of(2L)), userStorage.get(1).getFriends());
-        assertEquals(new HashSet<>(Set.of(1L, 4L)), userStorage.get(2).getFriends());
-        assertTrue(userStorage.get(3).getFriends().isEmpty());
-        assertEquals(new HashSet<>(Set.of(2L)), userStorage.get(4).getFriends());
+        assertEquals(new HashSet<>(Set.of(2L)), userService.get(1).getFriends());
+        assertTrue(userService.get(2).getFriends().isEmpty());
+        assertTrue(userService.get(3).getFriends().isEmpty());
+        assertEquals(new HashSet<>(Set.of(2L)), userService.get(4).getFriends());
     }
 
     @Test
@@ -389,12 +401,12 @@ class FilmorateApplicationTests {
         film4.setId(4);
         film5.setId(5);
         //Проверяем напрямую в базе
-        assertEquals(5, filmStorage.getList().size());
-        assertEquals(film1, filmStorage.get(1));
-        assertEquals(film2, filmStorage.get(2));
-        assertEquals(film3, filmStorage.get(3));
-        assertEquals(film4, filmStorage.get(4));
-        assertEquals(film5, filmStorage.get(5));
+        assertEquals(5, filmStorage.getAll().size());
+        assertEquals(film1, filmService.get(1));
+        assertEquals(film2, filmService.get(2));
+        assertEquals(film3, filmService.get(3));
+        assertEquals(film4, filmService.get(4));
+        assertEquals(film5, filmService.get(5));
     }
 
     @Test
@@ -459,7 +471,7 @@ class FilmorateApplicationTests {
                 .andExpect(jsonPath("$.duration").value("99"))
                 .andReturn();
         //Проверяем напрямую в базе.
-        assertEquals(film1Updated, filmStorage.get(1));
+        assertEquals(film1Updated, filmService.get(1));
     }
 
     @Test
@@ -514,11 +526,11 @@ class FilmorateApplicationTests {
         mockPerfomPut("/films/4/like/4", null)
                 .andExpect(status().isOk());
         //Проверяем напрямую в базе.
-        assertTrue(filmStorage.get(1).getLikes().isEmpty());
-        assertEquals(new HashSet<>(Set.of(1L, 4L)), filmStorage.get(2).getLikes());
-        assertEquals(new HashSet<>(Set.of(1L, 2L, 3L, 5L)), filmStorage.get(3).getLikes());
-        assertEquals(new HashSet<>(Set.of(4L)), filmStorage.get(4).getLikes());
-        assertTrue(filmStorage.get(5).getLikes().isEmpty());
+        assertTrue(filmService.get(1).getLikes().isEmpty());
+        assertEquals(new HashSet<>(Set.of(1L, 4L)), filmService.get(2).getLikes());
+        assertEquals(new HashSet<>(Set.of(1L, 2L, 3L, 5L)), filmService.get(3).getLikes());
+        assertEquals(new HashSet<>(Set.of(4L)), filmService.get(4).getLikes());
+        assertTrue(filmService.get(5).getLikes().isEmpty());
     }
 
     @Test
@@ -543,11 +555,11 @@ class FilmorateApplicationTests {
         mockPerfomDelete("/films/3/like/3")
                 .andExpect(status().isOk());
         //Проверяем напрямую в базе.
-        assertTrue(filmStorage.get(1).getLikes().isEmpty());
-        assertEquals(new HashSet<>(Set.of(1L, 4L)), filmStorage.get(2).getLikes());
-        assertEquals(new HashSet<>(Set.of(1L, 2L, 5L)), filmStorage.get(3).getLikes());
-        assertEquals(new HashSet<>(Set.of(4L)), filmStorage.get(4).getLikes());
-        assertTrue(filmStorage.get(5).getLikes().isEmpty());
+        assertTrue(filmService.get(1).getLikes().isEmpty());
+        assertEquals(new HashSet<>(Set.of(1L, 4L)), filmService.get(2).getLikes());
+        assertEquals(new HashSet<>(Set.of(1L, 2L, 5L)), filmService.get(3).getLikes());
+        assertEquals(new HashSet<>(Set.of(4L)), filmService.get(4).getLikes());
+        assertTrue(filmService.get(5).getLikes().isEmpty());
     }
 
     @Test
@@ -622,6 +634,17 @@ class FilmorateApplicationTests {
         assertEquals(10, j.get(9).getAsJsonObject().get("id").getAsInt());
     }
 
+    @Test
+    @Order(320)
+    void updateUserWithFriends() throws Exception {
+        // На начало теста у юзера 1 есть друг 2.
+        assertEquals(new HashSet<>(Set.of(2L)), userService.get(1).getFriends());
+        user1Updated.setFriends(new HashSet<>(Set.of(1L, 3L)));
+        mockPerfomPut("/users", user1Updated)
+                .andExpect(status().isOk());
+        assertEquals(new HashSet<>(Set.of(1L, 3L)), userService.get(1).getFriends());
+    }
+
 
     @Test
     @Order(1000)
@@ -661,6 +684,5 @@ class FilmorateApplicationTests {
         assertEquals(4, j.get(2).getAsJsonObject().get("id").getAsInt());
         assertEquals(5, j.get(3).getAsJsonObject().get("id").getAsInt());
     }
-
 
 }
