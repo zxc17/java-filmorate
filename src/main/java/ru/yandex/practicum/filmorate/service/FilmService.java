@@ -101,10 +101,17 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilmList(long count) {
-        return filmStorage.getAll().stream()
+        List<Film> result = filmStorage.getAll().stream()
                 .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
+        result.forEach(film -> {
+            film.setGenres(filmGenreStorage.get(film.getId()).stream()
+                    .map(genreStorage::get)
+                    .collect(Collectors.toSet()));
+            film.setLikes(likesStorage.get(film.getId()));
+        });
+        return result;
     }
 
     private boolean isValidFilm(Film f) {
