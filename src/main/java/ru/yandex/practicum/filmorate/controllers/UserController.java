@@ -31,6 +31,7 @@ public class UserController {
         return userService.get(id);
     }
 
+    // Задача по удалению фильмов и юзеров выполнена в предыдущем спринте. Комментарий, чтобы было что коммитить.
     @DeleteMapping(("/users/{id}"))
     public void remove(@PathVariable long id) {
         userService.remove(id);
