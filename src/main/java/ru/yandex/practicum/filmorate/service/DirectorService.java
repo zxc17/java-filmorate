@@ -12,36 +12,37 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class DirectorService {
+
     private final DirectorStorage directorStorage;
 
-    public Director addDirector(Director d) {
+    public Director add(Director d) {
         if (d.getName() == null || d.getName().isBlank()) {
             throw new ValidationDataException("Некорректные данные режиссера.");
         }
-        return directorStorage.addDirector(d);
+        return directorStorage.add(d);
     }
 
-    public Set<Director> getAllDirectors() {
-        return directorStorage.getAllDirectors();
+    public Set<Director> getAll() {
+        return directorStorage.getAll();
     }
 
-    public Director getDirectorById(long id) {
-        Director result = directorStorage.getDirectorById(id);
+    public Director getById(long id) {
+        Director result = directorStorage.getById(id);
         if (result == null) throw new ValidationNotFoundException(String.format("directorId=%s не найден.", id));
         return result;
     }
 
-    public Director updateDirector(Director d) {
+    public Director update(Director d) {
         if (d.getName() == null || d.getName().isBlank()) {
             throw new ValidationDataException("Некорректные данные режиссера.");
         }
-        if (directorStorage.updateDirector(d) == 0) throw new ValidationNotFoundException(
+        if (directorStorage.update(d) == 0) throw new ValidationNotFoundException(
                 String.format("Невозможно обновить данные режиссера, id=%s не найден.", d.getId()));
         return d;
     }
 
-    public void deleteDirector(long id) {
-        if (directorStorage.deleteDirector(id) == 0)
+    public void remove(long id) {
+        if (directorStorage.remove(id) == 0)
             throw new ValidationNotFoundException(
                     String.format("Ошибка при удалении данных из БД. directorId=%s не найден.", id));
     }

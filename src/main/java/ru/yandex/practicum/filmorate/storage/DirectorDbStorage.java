@@ -23,7 +23,7 @@ public class DirectorDbStorage implements DirectorStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public Director getDirectorById(long id) {
+    public Director getById(long id) {
         String sql = "select * from DIRECTORS where DIRECTOR_ID = ?";
         List<Director> query = jdbcTemplate.query(sql, this::mapRowToDirector, id);
         switch (query.size()) {
@@ -37,13 +37,13 @@ public class DirectorDbStorage implements DirectorStorage {
     }
 
     @Override
-    public Set<Director> getAllDirectors() {
+    public Set<Director> getAll() {
         String sql = "select * from DIRECTORS";
         return new LinkedHashSet<>(jdbcTemplate.query(sql, this::mapRowToDirector));
     }
 
     @Override
-    public Director addDirector(Director d) {
+    public Director add(Director d) {
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
         Map<String, Object> values = new HashMap<>();
         values.put("DIRECTOR_NAME", d.getName());
@@ -56,7 +56,7 @@ public class DirectorDbStorage implements DirectorStorage {
     }
 
     @Override
-    public int updateDirector(Director d) {
+    public int update(Director d) {
         String sql = "update DIRECTORS " +
                 "set DIRECTOR_NAME = ? " +
                 "where DIRECTOR_ID = ?";
@@ -64,14 +64,14 @@ public class DirectorDbStorage implements DirectorStorage {
     }
 
     @Override
-    public int deleteDirector(long id) {
+    public int remove(long id) {
         String sql = "delete from DIRECTORS where DIRECTOR_ID = ?";
         return jdbcTemplate.update(sql, id);
     }
 
     @Override
     public Set<Director> getNames(Set<Director> directorsIds) {
-        return directorsIds.stream().map(d -> getDirectorById(d.getId())).collect(Collectors.toSet());
+        return directorsIds.stream().map(d -> getById(d.getId())).collect(Collectors.toSet());
     }
 
     private Director mapRowToDirector(ResultSet resultSet, int rowNum) throws SQLException {

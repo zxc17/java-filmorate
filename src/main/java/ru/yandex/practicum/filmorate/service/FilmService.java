@@ -122,7 +122,7 @@ public class FilmService {
         return result;
     }
 
-    public List<Film> getSortDirectorsFilm(long directorId, String sort) {
+    public List<Film> getSortedListByDirectors(long directorId, String sort) {
         if (sort.equals("year")) {
             List<Film> result = new ArrayList<>(filmStorage.getDirectorsFilmSortByYears(directorId));
             if (result.size() == 0) {
@@ -156,7 +156,7 @@ public class FilmService {
                     .collect(Collectors.toSet()));
             film.setLikes(likesStorage.get(film.getId()));
             film.setDirectors(filmDirectorStorage.getDirectorByFilm(film.getId()).stream()
-                    .map(directorStorage::getDirectorById)
+                    .map(directorStorage::getById)
                     .collect(Collectors.toSet()));
         });
     }

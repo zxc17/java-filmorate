@@ -6,15 +6,15 @@ import java.util.Set;
 
 public interface DirectorStorage {
 
-    Director getDirectorById(long id);
+    Director getById(long id);
 
-    Set<Director> getAllDirectors();
+    Set<Director> getAll();
 
-    Director addDirector(Director d);
+    Director add(Director d);
 
-    int updateDirector(Director d);
+    int update(Director d);
 
-    int deleteDirector(long id);
+    int remove(long id);
 
     Set<Director> getNames(Set<Director> directorsIds);
 

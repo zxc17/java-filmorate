@@ -23,28 +23,28 @@ public class DirectorController {
     }
 
     @GetMapping("/directors")
-    public Set<Director> getAllDirectors() {
-        return directorService.getAllDirectors();
+    public Set<Director> getAll() {
+        return directorService.getAll();
     }
 
     @GetMapping("/directors/{id}")
     public Director get(@PathVariable long id) {
-        return directorService.getDirectorById(id);
+        return directorService.getById(id);
     }
 
     @PostMapping("/directors")
     public Director add(@RequestBody Director d) {
-        return directorService.addDirector(d);
+        return directorService.add(d);
     }
 
     @PutMapping("/directors")
     public Director update(@RequestBody Director d) {
-        return directorService.updateDirector(d);
+        return directorService.update(d);
     }
 
     @DeleteMapping("/directors/{id}")
-    public void deleteDirector(@PathVariable long id) {
-        directorService.deleteDirector(id);
+    public void remove(@PathVariable long id) {
+        directorService.remove(id);
     }
 
 }
