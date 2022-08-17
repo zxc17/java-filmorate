@@ -50,3 +50,15 @@ create table if not exists FILM_GENRE
     primary key (FILM_ID, GENRE_ID)
 );
 
+create table if not exists DIRECTORS
+(
+    DIRECTOR_ID   integer primary key auto_increment,
+    DIRECTOR_NAME varchar(255) not null
+);
+
+create table if not exists FILM_DIRECTOR
+(
+    FILM_ID  integer not null references FILMS (FILM_ID) on delete cascade,
+    DIRECTOR_ID integer not null references DIRECTORS (DIRECTOR_ID) on delete cascade,
+    primary key (FILM_ID, DIRECTOR_ID)
+);
