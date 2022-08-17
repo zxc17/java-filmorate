@@ -7,7 +7,7 @@ import java.util.Set;
 
 public interface FilmGenreStorage {
 
-    void add(long filmId, long genreId);
+    abstract void add(long filmId, long genreId);
 
     List<Long> get(long filmId);
 
