@@ -113,13 +113,43 @@ public class FilmService {
         likesStorage.remove(filmId, userId);
     }
 
-    public List<Film> getPopularFilmList(long count) {
-        List<Film> result = filmStorage.getAll().stream()
-                .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
-        loadDataIntoFilm(result);
-        return result;
+    public List<Film> getPopularFilmList(Integer count, Integer year, Integer genreId) {
+        List<Film> filmList = null;
+
+        if (year != null && genreId == null) {
+            filmList = filmStorage.getPopularFilmsByYear(year, count);
+            filmList.forEach(film -> {
+                film.setGenres(filmGenreStorage.get(film.getId()).stream()
+                        .map(genreStorage::get)
+                        .collect(Collectors.toSet()));
+                film.setLikes(likesStorage.get(film.getId()));
+            });
+        } else if (genreId != null && year == null) {
+            filmList = filmStorage.getPopularFilmsByGenre(genreId, count);
+            filmList.forEach(film -> {
+                film.setGenres(filmGenreStorage.get(film.getId()).stream()
+                        .map(genreStorage::get)
+                        .collect(Collectors.toSet()));
+                film.setLikes(likesStorage.get(film.getId()));
+            });
+        } else if (genreId != null && year != null) {
+            filmList = filmStorage.getPopularFilmsByYearAndGenre(year, genreId, count);
+            filmList.forEach(film -> {
+                film.setGenres(filmGenreStorage.get(film.getId()).stream()
+                        .map(genreStorage::get)
+                        .collect(Collectors.toSet()));
+                film.setLikes(likesStorage.get(film.getId()));
+            });
+        } else {
+            filmList = filmStorage.getAll().stream()
+                    .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
+                    .limit(count)
+                    .collect(Collectors.toList());
+        }
+
+        loadDataIntoFilm(filmList);
+
+        return filmList;
     }
 
     public List<Film> getSortedListByDirectors(long directorId, String sort) {

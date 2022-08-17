@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface FilmStorage {
 
-    Film add(Film f);
+    abstract Film add(Film f);
 
     Film get(long id);
 
@@ -22,5 +22,11 @@ public interface FilmStorage {
     Collection<Film> getDirectorsFilm(long directorId);
 
     Collection<Film> getDirectorsFilmSortByYears(long directorId);
+
+    List<Film> getPopularFilmsByGenre(Integer genreId, Integer count);
+
+    List<Film> getPopularFilmsByYear(Integer year, Integer count);
+
+    List<Film> getPopularFilmsByYearAndGenre(Integer year, Integer genreId, Integer count);
 
 }
