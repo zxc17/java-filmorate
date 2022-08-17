@@ -2,12 +2,17 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.storage.FilmDirectorStorage;
-import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.*;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.FilmDirectorStorage;
+import ru.yandex.practicum.filmorate.storage.FilmGenreStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.GenreStorage;
+import ru.yandex.practicum.filmorate.storage.LikesStorage;
+import ru.yandex.practicum.filmorate.storage.MpaStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
