@@ -60,4 +60,13 @@ public class FilmController {
     public List<Film> getPopularFilmList(@RequestParam(defaultValue = "10", required = false) long count) {
         return filmService.getPopularFilmList(count);
     }
+
+    @GetMapping("/films/director/{directorId}")
+    public List<Film> getSortFilms(
+            @PathVariable long directorId,
+            @RequestParam(value = "sortBy", required = false) String sort) {
+        return filmService.getSortDirectorsFilm(directorId, sort);
+
+    }
+
 }

@@ -2,12 +2,15 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.storage.FilmDirectorStorage;
+import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +24,8 @@ public class FilmService {
     final LikesStorage likesStorage;
     final GenreStorage genreStorage;
     final MpaStorage mpaStorage;
+    final FilmDirectorStorage filmDirectorStorage;
+    final DirectorStorage directorStorage;
 
     public Film add(Film f) {
         if (!isValidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");
@@ -33,27 +38,25 @@ public class FilmService {
             // Чтобы в возврате было всё корректно, прописываем genre_name
             f.setGenres(genreStorage.getNames(f.getGenres()));
         }
+        if (f.getDirectors() != null) {
+            filmDirectorStorage.updateDirectorByFilm(f.getId(), f.getDirectors());
+            f.setDirectors(directorStorage.getNames(f.getDirectors()));
+        }
         return f;
     }
 
     public Film get(long filmId) {
         Film film = filmStorage.get(filmId);
         if (film == null) throw new ValidationNotFoundException(String.format("filmId=%s не найден.", filmId));
-        film.setGenres(filmGenreStorage.get(filmId).stream()
-                .map(genreStorage::get)
-                .collect(Collectors.toSet()));
-        film.setLikes(likesStorage.get(filmId));
-        return film;
+        List<Film> films = new ArrayList<>();
+        films.add(film);
+        loadDataIntoFilm(films);
+        return films.get(0);
     }
 
     public List<Film> getAll() {
         List<Film> result = filmStorage.getAll();
-        result.forEach(film -> {
-            film.setGenres(filmGenreStorage.get(film.getId()).stream()
-                    .map(genreStorage::get)
-                    .collect(Collectors.toSet()));
-            film.setLikes(likesStorage.get(film.getId()));
-        });
+        loadDataIntoFilm(result);
         return result;
     }
 
@@ -67,6 +70,11 @@ public class FilmService {
         filmStorage.update(f);
         if (f.getGenres() != null)
             filmGenreStorage.update(f.getId(), f.getGenres());
+        if (f.getDirectors() != null) {
+            filmDirectorStorage.updateDirectorByFilm(f.getId(), f.getDirectors());
+        } else {
+            filmDirectorStorage.clearDirectorByFilm(f.getId());
+        }
         return f;
     }
 
@@ -105,13 +113,47 @@ public class FilmService {
                 .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
-        result.forEach(film -> {
+        loadDataIntoFilm(result);
+        return result;
+    }
+
+    public List<Film> getSortDirectorsFilm(long directorId, String sort) {
+        if (sort.equals("year")) {
+            List<Film> result = new ArrayList<>(filmStorage.getDirectorsFilmSortByYears(directorId));
+            if (result.size() == 0) {
+                throw new ValidationNotFoundException(String.format("directorId=%s не найден.", directorId));
+            }
+            loadDataIntoFilm(result);
+            return result;
+        } else if (sort.equals("likes")) {
+            return getFilmsSortByLikes(directorId);
+        } else {
+            throw new ValidationNotFoundException(
+                    String.format("Сортирока может быть только по year и likes. Указана сортировка = %s", sort));
+        }
+    }
+
+    private List<Film> getFilmsSortByLikes(long directorId) {
+        List<Film> result = filmStorage.getDirectorsFilm(directorId).stream()
+                .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
+                .collect(Collectors.toList());
+        if (result.size() == 0) {
+            throw new ValidationNotFoundException(String.format("directorId=%s не найден.", directorId));
+        }
+        loadDataIntoFilm(result);
+        return result;
+    }
+
+    private void loadDataIntoFilm(List<Film> films) {
+        films.forEach(film -> {
             film.setGenres(filmGenreStorage.get(film.getId()).stream()
                     .map(genreStorage::get)
                     .collect(Collectors.toSet()));
             film.setLikes(likesStorage.get(film.getId()));
+            film.setDirectors(filmDirectorStorage.getDirectorByFilm(film.getId()).stream()
+                    .map(directorStorage::getDirectorById)
+                    .collect(Collectors.toSet()));
         });
-        return result;
     }
 
     private boolean isValidFilm(Film f) {

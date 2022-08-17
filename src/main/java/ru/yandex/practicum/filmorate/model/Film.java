@@ -29,4 +29,6 @@ public class Film {
     private Mpa mpa;
     private Set<Genre> genres; //Может отсутствовать.
     private Set<Long> likes;
+    private Set<Director> directors;
+
 }

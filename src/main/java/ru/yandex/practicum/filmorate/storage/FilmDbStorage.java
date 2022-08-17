@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +89,27 @@ public class FilmDbStorage implements FilmStorage {
     public void clear() {
         String sql = "delete from FILMS";
         jdbcTemplate.update(sql);
+    }
+
+    @Override
+    public Collection<Film> getDirectorsFilm(long directorId) {
+        String sql = "select f.*, m.* " +
+                "from FILMS f " +
+                "join MPA m on f.MPA_ID = m.MPA_ID " +
+                "left join FILM_DIRECTOR FD on f.FILM_ID = FD.FILM_ID " +
+                "where DIRECTOR_ID = ?";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
+    }
+
+    @Override
+    public Collection<Film> getDirectorsFilmSortByYears(long directorId) {
+        String sql = "select f.*, m.* " +
+                "from FILMS f " +
+                "join MPA m on f.MPA_ID = m.MPA_ID " +
+                "left join FILM_DIRECTOR FD on f.FILM_ID = FD.FILM_ID " +
+                "where DIRECTOR_ID = ?" +
+                "order by EXTRACT(YEAR FROM RELEASE_DATE) ASC";
+        return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
 
