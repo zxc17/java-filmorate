@@ -6,6 +6,8 @@ import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.ReviewDislikesStorage;
+import ru.yandex.practicum.filmorate.storage.ReviewLikesStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -16,6 +18,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReviewService {
     private final ReviewStorage reviewStorage;
+    private final ReviewLikesStorage reviewLikesStorage;
+    private final ReviewDislikesStorage reviewDislikesStorage;
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
 
@@ -79,21 +83,65 @@ public class ReviewService {
         reviewStorage.clear();
     }
 
-    public Review addUseful(Long id, Long userId) {
+    public Review changeUseful(Long id, Long userId, boolean toAdd, boolean isLike) {
         if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
 
         Review review = reviewStorage.get(id);
-        review.setUseful(review.getUseful() + 1);
-        return reviewStorage.update(review, 1);
-    }
 
-    public Review lowerUseful(Long id, Long userId) {
-        if (userStorage.get(userId) == null)
-            throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
+        if (review == null)
+            throw new ValidationNotFoundException(String.format("reviewId=%s не найден.", id));
 
-        Review review = reviewStorage.get(id);
-        review.setUseful(review.getUseful() - 1);
+        List<Long> userLikes = reviewLikesStorage.getUserLikes(userId);
+        List<Long> userDislikes = reviewDislikesStorage.getUserDislikes(userId);
+
+
+
+        if (toAdd)          // добавить оценку
+            if (isLike) {   // лайк
+                if (userLikes.contains(id))
+                    throw new ValidationDataException(String
+                            .format("userId=%s уже поставил лайк reviewId=%s.", userId, id));
+                if (userDislikes.contains(id))
+                    throw new ValidationDataException(String
+                            .format("userId=%s уже поставил дизлайк reviewId=%s.", userId, id));
+
+                reviewLikesStorage.add(id, userId);
+                review.setUseful(review.getUseful() + 1);
+            } else {        // дизлайк
+                if (userLikes.contains(id))
+                    throw new ValidationDataException(String
+                            .format("userId=%s уже поставил лайк reviewId=%s.", userId, id));
+                if (userDislikes.contains(id))
+                    throw new ValidationDataException(String
+                            .format("userId=%s уже поставил дизлайк reviewId=%s.", userId, id));
+
+                reviewDislikesStorage.add(id, userId);
+                review.setUseful(review.getUseful() - 1);
+            }
+        else                // удалить оценку
+            if (isLike) {   // лайк
+                if (userDislikes.contains(id))
+                    throw new ValidationDataException(String
+                            .format("userId=%s поставил дизлайк reviewId=%s, а не лайк.", userId, id));
+                if (!userLikes.contains(id))
+                    throw new ValidationDataException(String
+                            .format("userId=%s не поставил лайк reviewId=%s.", userId, id));
+
+                reviewLikesStorage.remove(id, userId);
+                review.setUseful(review.getUseful() - 1);
+            } else {        // дизлайк
+                if (userLikes.contains(id))
+                    throw new ValidationDataException(String
+                            .format("userId=%s поставил лайк reviewId=%s, а не дизлайк.", userId, id));
+                if (!userDislikes.contains(id))
+                    throw new ValidationDataException(String
+                            .format("userId=%s не поставил дизлайк reviewId=%s.", userId, id));
+
+                reviewDislikesStorage.remove(id, userId);
+                review.setUseful(review.getUseful() + 1);
+            }
+
         return reviewStorage.update(review, 1);
     }
 

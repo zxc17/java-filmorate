@@ -72,7 +72,7 @@ public class ReviewDbStorage implements ReviewStorage {
                 throw new StorageException(String.format("Ошибка при обновлении данных в таблице REVIEWS, id=%s.",
                         review.getReviewId()));
         }
-        return review;
+        return get(review.getReviewId());
     }
 
     @Override

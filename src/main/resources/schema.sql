@@ -60,6 +60,18 @@ create table if not exists REVIEWS
     USEFULNESS  integer      not null
 );
 
+create table if not exists REVIEW_LIKES
+(
+    REVIEW_ID integer not null references REVIEWS (REVIEW_ID) on delete cascade,
+    USER_ID   integer not null references USERS (USER_ID) on delete cascade
+);
+
+create table if not exists REVIEW_DISLIKES
+(
+    REVIEW_ID integer not null references REVIEWS (REVIEW_ID) on delete cascade,
+    USER_ID   integer not null references USERS (USER_ID) on delete cascade
+);
+
 create table if not exists DIRECTORS
 (
     DIRECTOR_ID   integer primary key auto_increment,
