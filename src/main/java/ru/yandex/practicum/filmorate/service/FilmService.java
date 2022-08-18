@@ -118,28 +118,10 @@ public class FilmService {
 
         if (year != null && genreId == null) {
             filmList = filmStorage.getPopularFilmsByYear(year, count);
-            filmList.forEach(film -> {
-                film.setGenres(filmGenreStorage.get(film.getId()).stream()
-                        .map(genreStorage::get)
-                        .collect(Collectors.toSet()));
-                film.setLikes(likesStorage.get(film.getId()));
-            });
         } else if (genreId != null && year == null) {
             filmList = filmStorage.getPopularFilmsByGenre(genreId, count);
-            filmList.forEach(film -> {
-                film.setGenres(filmGenreStorage.get(film.getId()).stream()
-                        .map(genreStorage::get)
-                        .collect(Collectors.toSet()));
-                film.setLikes(likesStorage.get(film.getId()));
-            });
         } else if (genreId != null && year != null) {
             filmList = filmStorage.getPopularFilmsByYearAndGenre(year, genreId, count);
-            filmList.forEach(film -> {
-                film.setGenres(filmGenreStorage.get(film.getId()).stream()
-                        .map(genreStorage::get)
-                        .collect(Collectors.toSet()));
-                film.setLikes(likesStorage.get(film.getId()));
-            });
         } else {
             filmList = filmStorage.getAll().stream()
                     .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())

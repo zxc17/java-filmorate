@@ -118,13 +118,14 @@ public class FilmDbStorage implements FilmStorage {
             throw new StorageException(String.format("Ошибка при запросе данных из БД FILMS"));
         }
 
-        String sqlQueryGetPopularFilmsByGenre = "SELECT * FROM FILMS " +
+        String sqlQueryGetPopularFilmsByGenre = "SELECT FILMS.*, MPA_NAME FROM FILMS " +
                 "JOIN MPA ON FILMS.mpa_id = MPA.mpa_id " +
                 "LEFT JOIN FILM_GENRE ON FILMS.film_id = FILM_GENRE.film_id " +
                 "LEFT JOIN LIKES ON FILM_GENRE.film_id = LIKES.film_id " +
-                "WHERE FILM_GENRE.GENRE_ID = ?" +
-                "GROUP BY FILM_GENRE.GENRE_ID " +
-                "ORDER BY COUNT (LIKES.user_id) LIMIT ?";
+                "WHERE FILM_GENRE.GENRE_ID = ? " +
+                "GROUP BY FILMS.film_id " +
+                "ORDER BY COUNT (LIKES.user_id) DESC " +
+                "LIMIT ?";
 
         return jdbcTemplate.query(sqlQueryGetPopularFilmsByGenre, this::mapRowToFilm, genreId, count);
     }
@@ -140,7 +141,8 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN LIKES ON FILMS.film_id = LIKES.film_id " +
                 "WHERE YEAR(FILMS.RELEASE_DATE) = ?" +
                 "GROUP BY FILMS.film_id " +
-                "ORDER BY COUNT (LIKES.user_id) LIMIT ?";
+                "ORDER BY COUNT (LIKES.user_id) DESC " +
+                "LIMIT ?";
 
         return jdbcTemplate.query(sqlQueryGetPopularFilmsByYear, this::mapRowToFilm, year, count);
     }

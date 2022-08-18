@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface FilmStorage {
 
-    abstract Film add(Film f);
+    Film add(Film f);
 
     Film get(long id);
 
