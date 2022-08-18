@@ -50,6 +50,16 @@ create table if not exists FILM_GENRE
     primary key (FILM_ID, GENRE_ID)
 );
 
+create table if not exists REVIEWS
+(
+    REVIEW_ID   integer      primary key auto_increment,
+    CONTENT     varchar(200) not null,
+    IS_POSITIVE boolean      not null,
+    USER_ID     integer      not null references USERS (USER_ID) on delete cascade,
+    FILM_ID     integer      not null references FILMS (FILM_ID) on delete cascade,
+    USEFULNESS  integer      not null
+);
+
 create table if not exists DIRECTORS
 (
     DIRECTOR_ID   integer primary key auto_increment,
