@@ -23,4 +23,10 @@ public interface FilmStorage {
 
     Collection<Film> getDirectorsFilmSortByYears(long directorId);
 
+    List<Film> getPopularFilmsByGenre(Integer genreId, Integer count);
+
+    List<Film> getPopularFilmsByYear(Integer year, Integer count);
+
+    List<Film> getPopularFilmsByYearAndGenre(Integer year, Integer genreId, Integer count);
+
 }

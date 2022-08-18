@@ -113,13 +113,25 @@ public class FilmService {
         likesStorage.remove(filmId, userId);
     }
 
-    public List<Film> getPopularFilmList(long count) {
-        List<Film> result = filmStorage.getAll().stream()
-                .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
-                .limit(count)
-                .collect(Collectors.toList());
-        loadDataIntoFilm(result);
-        return result;
+    public List<Film> getPopularFilmList(Integer count, Integer year, Integer genreId) {
+        List<Film> filmList = null;
+
+        if (year != null && genreId == null) {
+            filmList = filmStorage.getPopularFilmsByYear(year, count);
+        } else if (genreId != null && year == null) {
+            filmList = filmStorage.getPopularFilmsByGenre(genreId, count);
+        } else if (genreId != null && year != null) {
+            filmList = filmStorage.getPopularFilmsByYearAndGenre(year, genreId, count);
+        } else {
+            filmList = filmStorage.getAll().stream()
+                    .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
+                    .limit(count)
+                    .collect(Collectors.toList());
+        }
+
+        loadDataIntoFilm(filmList);
+
+        return filmList;
     }
 
     public List<Film> getSortedListByDirectors(long directorId, String sort) {

@@ -112,6 +112,58 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, this::mapRowToFilm, directorId);
     }
 
+    @Override
+    public List<Film> getPopularFilmsByGenre(Integer genreId, Integer count) {
+        if (genreId < 0 || count < 0) {
+            throw new StorageException(String.format("Ошибка при запросе данных из БД FILMS"));
+        }
+
+        String sqlQueryGetPopularFilmsByGenre = "SELECT FILMS.*, MPA_NAME FROM FILMS " +
+                "JOIN MPA ON FILMS.mpa_id = MPA.mpa_id " +
+                "LEFT JOIN FILM_GENRE ON FILMS.film_id = FILM_GENRE.film_id " +
+                "LEFT JOIN LIKES ON FILM_GENRE.film_id = LIKES.film_id " +
+                "WHERE FILM_GENRE.GENRE_ID = ? " +
+                "GROUP BY FILMS.film_id " +
+                "ORDER BY COUNT (LIKES.user_id) DESC " +
+                "LIMIT ?";
+
+        return jdbcTemplate.query(sqlQueryGetPopularFilmsByGenre, this::mapRowToFilm, genreId, count);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByYear(Integer year, Integer count) {
+        if (year < 0 || count < 0) {
+            throw new StorageException(String.format("Ошибка при запросе данных из БД FILMS"));
+        }
+
+        String sqlQueryGetPopularFilmsByYear = "SELECT FILMS.*, MPA_NAME FROM FILMS " +
+                "JOIN MPA ON FILMS.mpa_id = MPA.mpa_id " +
+                "LEFT JOIN LIKES ON FILMS.film_id = LIKES.film_id " +
+                "WHERE YEAR(FILMS.RELEASE_DATE) = ?" +
+                "GROUP BY FILMS.film_id " +
+                "ORDER BY COUNT (LIKES.user_id) DESC " +
+                "LIMIT ?";
+
+        return jdbcTemplate.query(sqlQueryGetPopularFilmsByYear, this::mapRowToFilm, year, count);
+    }
+
+    @Override
+    public List<Film> getPopularFilmsByYearAndGenre(Integer year, Integer genreId, Integer count) {
+        if (year < 0 || genreId < 0 || count < 0) {
+            throw new StorageException(String.format("Ошибка при запросе данных из БД FILMS"));
+        }
+
+        String sqlQueryGetPopularFilmsByYearAndGenre = "SELECT FILMS.*, MPA_NAME FROM FILMS " +
+                "JOIN MPA ON FILMS.mpa_id = MPA.mpa_id " +
+                "LEFT JOIN FILM_GENRE ON FILMS.film_id = FILM_GENRE.film_id " +
+                "LEFT JOIN LIKES ON FILM_GENRE.film_id = LIKES.film_id " +
+                "WHERE YEAR(FILMS.RELEASE_DATE) = ? AND FILM_GENRE.GENRE_ID = ? " +
+                "GROUP BY FILMS.film_id " +
+                "ORDER BY COUNT (LIKES.user_id) DESC " +
+                "LIMIT ?";
+
+        return jdbcTemplate.query(sqlQueryGetPopularFilmsByYearAndGenre, this::mapRowToFilm, year, genreId, count);
+    }
 
     private Film mapRowToFilm(ResultSet resultSet, int numRow) throws SQLException {
         return Film.builder()
