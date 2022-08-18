@@ -150,6 +150,16 @@ public class FilmService {
         }
     }
 
+    public List<Film> getCommonFilms(long user1Id, long user2Id) {
+        if (userStorage.get(user1Id) == null)
+            throw new ValidationNotFoundException(String.format("userId=%s не найден.", user1Id));
+        if (userStorage.get(user2Id) == null)
+            throw new ValidationNotFoundException(String.format("userId=%s не найден.", user2Id));
+        List<Film> result = filmStorage.getCommonFilms(user1Id, user2Id);
+        loadDataIntoFilm(result);
+        return result;
+    }
+
     private List<Film> getFilmsSortByLikes(long directorId) {
         List<Film> result = filmStorage.getDirectorsFilm(directorId).stream()
                 .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
