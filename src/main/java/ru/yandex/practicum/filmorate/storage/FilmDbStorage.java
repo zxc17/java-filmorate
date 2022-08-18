@@ -12,10 +12,7 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -169,11 +166,12 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> getCommonFilms(long user1Id, long user2Id) {
         String sql = "SELECT f.*, m.* FROM FILMS AS f " +
                 "JOIN MPA AS m ON f.MPA_ID = m.MPA_ID " +
-                "RIGHT JOIN LIKES AS l1 ON f.FILM_ID = l1.FILM_ID " +
-                "RIGHT JOIN LIKES AS l2 ON l1.FILM_ID = l2.FILM_ID " +
+                "LEFT JOIN (SELECT FILM_ID, COUNT(FILM_ID) AS c " +
+                "FROM LIKES GROUP BY FILM_ID) AS s ON f.FILM_ID = s.FILM_ID " +
+                "LEFT JOIN LIKES AS l1 ON f.FILM_ID = l1.FILM_ID " +
+                "LEFT JOIN LIKES AS l2 ON l1.FILM_ID = l2.FILM_ID " +
                 "WHERE l1.USER_ID = ? AND l2.USER_ID = ? " +
-                "GROUP BY l1.FILM_ID " +
-                "ORDER BY COUNT (f.FILM_ID) DESC";
+                "GROUP BY f.FILM_ID ORDER BY c DESC";
 
         return jdbcTemplate.query(sql, this::mapRowToFilm, user1Id, user2Id);
     }
