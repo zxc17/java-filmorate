@@ -159,7 +159,8 @@ public class FilmDbStorage implements FilmStorage {
                 "LEFT JOIN LIKES ON FILM_GENRE.film_id = LIKES.film_id " +
                 "WHERE YEAR(FILMS.RELEASE_DATE) = ? AND FILM_GENRE.GENRE_ID = ? " +
                 "GROUP BY FILMS.film_id " +
-                "ORDER BY COUNT (LIKES.user_id) LIMIT ?";
+                "ORDER BY COUNT (LIKES.user_id) DESC " +
+                "LIMIT ?";
 
         return jdbcTemplate.query(sqlQueryGetPopularFilmsByYearAndGenre, this::mapRowToFilm, year, genreId, count);
     }
