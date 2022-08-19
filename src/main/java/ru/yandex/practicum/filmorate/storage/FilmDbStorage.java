@@ -77,7 +77,6 @@ public class FilmDbStorage implements FilmStorage {
         return f;
     }
 
-
     @Override
     public void remove(long id) {
         String sql = "delete from FILMS where FILM_ID = ?";
@@ -163,6 +162,20 @@ public class FilmDbStorage implements FilmStorage {
                 "LIMIT ?";
 
         return jdbcTemplate.query(sqlQueryGetPopularFilmsByYearAndGenre, this::mapRowToFilm, year, genreId, count);
+    }
+
+    @Override
+    public List<Film> getCommonFilms(long user1Id, long user2Id) {
+        String sql = "SELECT f.*, m.* FROM FILMS AS f " +
+                "JOIN MPA AS m ON f.MPA_ID = m.MPA_ID " +
+                "JOIN (SELECT FILM_ID, COUNT(*) AS c " +
+                "FROM LIKES GROUP BY FILM_ID) AS s ON f.FILM_ID = s.FILM_ID " +
+                "JOIN LIKES AS l1 ON f.FILM_ID = l1.FILM_ID " +
+                "JOIN LIKES AS l2 ON l1.FILM_ID = l2.FILM_ID " +
+                "WHERE l1.USER_ID = ? AND l2.USER_ID = ? " +
+                "GROUP BY f.FILM_ID ORDER BY c DESC";
+
+        return jdbcTemplate.query(sql, this::mapRowToFilm, user1Id, user2Id);
     }
 
     private Film mapRowToFilm(ResultSet resultSet, int numRow) throws SQLException {
