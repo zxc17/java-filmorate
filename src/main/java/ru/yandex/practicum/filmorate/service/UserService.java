@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.OperationType;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FriendsStorage;
@@ -68,7 +70,7 @@ public class UserService {
         if (userStorage.get(friendId) == null)
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
         friendsStorage.add(userId, friendId);
-        eventStorage.addEvent(userId, friendId, "FRIEND", "ADD");
+        eventStorage.addEvent(userId, friendId, EventType.FRIEND, OperationType.ADD);
     }
 
     public void removeFriend(long userId, long friendId) {
@@ -77,7 +79,7 @@ public class UserService {
         if (userStorage.get(friendId) == null)
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
         friendsStorage.remove(userId, friendId);
-        eventStorage.addEvent(userId, friendId, "FRIEND", "REMOVE");
+        eventStorage.addEvent(userId, friendId, EventType.FRIEND, OperationType.REMOVE);
     }
 
     public List<User> getFriendList(long userId) {

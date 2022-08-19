@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.OperationType;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,11 +22,11 @@ public class EventDbStorage implements EventStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public void addEvent(long userId, long entityId, String eventType, String operationType) {
+    public void addEvent(long userId, long entityId, EventType eventType, OperationType operationType) {
         long timestamp = Instant.now().toEpochMilli();
         String sql = "insert into EVENTS (time_stamp, event_type, operation, user_id, entity_id) " +
                 "values (?, ?, ?, ?, ?)";
-        jdbcTemplate.update(sql, timestamp, eventType, operationType, userId, entityId);
+        jdbcTemplate.update(sql, timestamp, eventType.toString(), operationType.toString(), userId, entityId);
     }
 
     @Override

@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
+import ru.yandex.practicum.filmorate.model.EventType;
+import ru.yandex.practicum.filmorate.model.OperationType;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -33,8 +35,11 @@ public class ReviewService {
         if (userStorage.get(review.getUserId()) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", review.getUserId()));
 
-        eventStorage.addEvent(review.getUserId(), review.getFilmId(), "REVIEW", "ADD");
-        return reviewStorage.add(review);
+        Review result = reviewStorage.add(review);
+        long userId = result.getUserId();
+        long entityId = result.getReviewId();
+        eventStorage.addEvent(userId, entityId, EventType.REVIEW, OperationType.ADD);
+        return result;
     }
 
     public Review update(Review review) {
@@ -45,8 +50,11 @@ public class ReviewService {
         if (userStorage.get(review.getUserId()) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", review.getUserId()));
 
-        eventStorage.addEvent(review.getUserId(), review.getFilmId(), "REVIEW", "UPDATE");
-        return reviewStorage.update(review, 0);
+        Review result = reviewStorage.update(review, 0);
+        long userId = result.getUserId();
+        long entityId = result.getReviewId();
+        eventStorage.addEvent(userId, entityId, EventType.REVIEW, OperationType.UPDATE);
+        return result;
     }
 
     public Review get(Long id) {
@@ -85,8 +93,7 @@ public class ReviewService {
 
     public void remove(Long id) {
         long userId = reviewStorage.get(id).getUserId();
-        long filmId = reviewStorage.get(id).getFilmId();
-        eventStorage.addEvent(userId, filmId, "REVIEW", "REMOVE");
+        eventStorage.addEvent(userId, id, EventType.REVIEW, OperationType.REMOVE);
         reviewStorage.remove(id);
     }
 
@@ -105,7 +112,6 @@ public class ReviewService {
 
         List<Long> userLikes = reviewLikesStorage.getUserLikes(userId);
         List<Long> userDislikes = reviewDislikesStorage.getUserDislikes(userId);
-
 
 
         if (toAdd)          // добавить оценку
@@ -156,18 +162,16 @@ public class ReviewService {
                 reviewDislikesStorage.remove(id, userId);
                 review.setUseful(review.getUseful() + 1);
             }
-
-       eventStorage.addEvent(review.getUserId(), review.getFilmId(), "REVIEW", "UPDATE");
         return reviewStorage.update(review, 1);
     }
 
     private boolean isInvalidReview(Review review) {
         if (review.getIsPositive() == null ||
-            review.getFilmId() == null ||
-            review.getUserId() == null ||
-            review.getContent() == null ||
-            review.getContent().isBlank() ||
-            review.getContent().length() > 200)
+                review.getFilmId() == null ||
+                review.getUserId() == null ||
+                review.getContent() == null ||
+                review.getContent().isBlank() ||
+                review.getContent().length() > 200)
             return true;
         else
             return false;
