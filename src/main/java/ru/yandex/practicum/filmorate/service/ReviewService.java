@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewDislikesStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewLikesStorage;
@@ -22,6 +23,7 @@ public class ReviewService {
     private final ReviewDislikesStorage reviewDislikesStorage;
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final EventStorage eventStorage;
 
     public Review add(Review review) {
         if (isInvalidReview(review))
@@ -31,6 +33,7 @@ public class ReviewService {
         if (userStorage.get(review.getUserId()) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", review.getUserId()));
 
+        eventStorage.addEvent(review.getUserId(), review.getFilmId(), "REVIEW", "ADD");
         return reviewStorage.add(review);
     }
 
@@ -42,6 +45,7 @@ public class ReviewService {
         if (userStorage.get(review.getUserId()) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", review.getUserId()));
 
+        eventStorage.addEvent(review.getUserId(), review.getFilmId(), "REVIEW", "UPDATE");
         return reviewStorage.update(review, 0);
     }
 
@@ -80,6 +84,9 @@ public class ReviewService {
     }
 
     public void remove(Long id) {
+        long userId = reviewStorage.get(id).getUserId();
+        long filmId = reviewStorage.get(id).getFilmId();
+        eventStorage.addEvent(userId, filmId, "REVIEW", "REMOVE");
         reviewStorage.remove(id);
     }
 
@@ -150,6 +157,7 @@ public class ReviewService {
                 review.setUseful(review.getUseful() + 1);
             }
 
+       eventStorage.addEvent(review.getUserId(), review.getFilmId(), "REVIEW", "UPDATE");
         return reviewStorage.update(review, 1);
     }
 

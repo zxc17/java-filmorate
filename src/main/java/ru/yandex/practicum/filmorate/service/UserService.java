@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
+import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FriendsStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 public class UserService {
     final UserStorage userStorage;
     final FriendsStorage friendsStorage;
+    final EventStorage eventStorage;
 
     public User add(User u) {
         if (!isValidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
@@ -65,6 +68,7 @@ public class UserService {
         if (userStorage.get(friendId) == null)
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
         friendsStorage.add(userId, friendId);
+        eventStorage.addEvent(userId, friendId, "FRIEND", "ADD");
     }
 
     public void removeFriend(long userId, long friendId) {
@@ -73,6 +77,7 @@ public class UserService {
         if (userStorage.get(friendId) == null)
             throw new ValidationNotFoundException(String.format("friendId=%s не найден.", friendId));
         friendsStorage.remove(userId, friendId);
+        eventStorage.addEvent(userId, friendId, "FRIEND", "REMOVE");
     }
 
     public List<User> getFriendList(long userId) {
@@ -95,6 +100,12 @@ public class UserService {
                 .collect(Collectors.toList());
         result.forEach(user -> user.setFriends(friendsStorage.getList(user.getId())));
         return result;
+    }
+
+    public List<Event> getFeedForUser(long userId) {
+        if (userStorage.get(userId) == null)
+            throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
+        return eventStorage.getFeedForUser(userId);
     }
 
     private boolean isValidUser(User u) {
