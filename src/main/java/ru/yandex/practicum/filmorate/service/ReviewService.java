@@ -61,18 +61,22 @@ public class ReviewService {
     public List<Review> getList(Long film_id, Integer listSize) {
         List<Review> result = reviewStorage.getAll();
 
-        if (listSize == -1)
-            listSize = 10;
+        if (listSize < 0)
+            throw new ValidationDataException("Некорректные данные запроса.");
 
-        if (film_id == -1)
+        if (film_id == null)
             return result.stream()
                     .limit(listSize)
                     .collect(Collectors.toList());
-        else
+        else {
+            if (filmStorage.get(film_id) == null)
+                throw new ValidationNotFoundException(String.format("filmId=%s не найден.", film_id));
+
             return result.stream()
                     .filter(review -> review.getFilmId().equals(film_id))
                     .limit(listSize)
                     .collect(Collectors.toList());
+        }
     }
 
     public void remove(Long id) {
@@ -102,19 +106,23 @@ public class ReviewService {
                 if (userLikes.contains(id))
                     throw new ValidationDataException(String
                             .format("userId=%s уже поставил лайк reviewId=%s.", userId, id));
-                if (userDislikes.contains(id))
-                    throw new ValidationDataException(String
-                            .format("userId=%s уже поставил дизлайк reviewId=%s.", userId, id));
+
+                if (userDislikes.contains(id)) {
+                    reviewDislikesStorage.remove(id, userId);
+                    review.setUseful(review.getUseful() + 1);
+                }
 
                 reviewLikesStorage.add(id, userId);
                 review.setUseful(review.getUseful() + 1);
             } else {        // дизлайк
-                if (userLikes.contains(id))
-                    throw new ValidationDataException(String
-                            .format("userId=%s уже поставил лайк reviewId=%s.", userId, id));
                 if (userDislikes.contains(id))
                     throw new ValidationDataException(String
                             .format("userId=%s уже поставил дизлайк reviewId=%s.", userId, id));
+
+                if (userLikes.contains(id)) {
+                    reviewLikesStorage.remove(id, userId);
+                    review.setUseful(review.getUseful() - 1);
+                }
 
                 reviewDislikesStorage.add(id, userId);
                 review.setUseful(review.getUseful() - 1);
