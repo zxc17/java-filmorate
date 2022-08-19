@@ -171,6 +171,28 @@ public class FilmService {
         return result;
     }
 
+    public List<Film> searchFilms(String query, List<String> by) {
+        List<Film> filmList = new ArrayList<>();
+        List<Film> filmListDirector = new ArrayList<>();
+        List<Film> filmListTitle = new ArrayList<>();
+
+        if (by.size() == 2) {
+            filmListDirector = filmStorage.searchFilmByDirector(query);
+            filmListTitle = filmStorage.searchFilmByTitle(query);
+            filmList.addAll(filmListDirector);
+            filmList.addAll(filmListTitle);
+        } else {
+            if (by.contains("director")) {
+                filmList = filmStorage.searchFilmByDirector(query);
+            } else {
+                filmList = filmStorage.searchFilmByTitle(query);
+            }
+        }
+
+        loadDataIntoFilm(filmList);
+        return filmList;
+    }
+
     private void loadDataIntoFilm(List<Film> films) {
         films.forEach(film -> {
             film.setGenres(filmGenreStorage.get(film.getId()).stream()
