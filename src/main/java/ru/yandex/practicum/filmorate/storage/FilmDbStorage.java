@@ -12,7 +12,10 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -73,7 +76,6 @@ public class FilmDbStorage implements FilmStorage {
         // Обновление жанров вызывается отдельно из модуля "сервис", обрабатывается FilmGenreStorage.
         return f;
     }
-
 
     @Override
     public void remove(long id) {
