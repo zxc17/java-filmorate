@@ -166,6 +166,34 @@ public class FilmService {
         return result;
     }
 
+    public List<Film> searchFilms(String query, List<String> by) {
+        List<Film> filmList = new ArrayList<>();
+
+        if (by.size() == 2) {
+            List<String> correctKey = List.of("director", "title");
+
+            by.forEach(k -> {
+                if (!correctKey.contains(k)) throw new ValidationDataException(String
+                        .format("Некорректный ключ поиска key=%s", k));
+            });
+
+            filmList = filmStorage.searchFilmByTitleAndDirector(query);
+        }
+
+        if (by.size() == 1) {
+            if (by.get(0).contains("director")) {
+                filmList = filmStorage.searchFilmByDirector(query);
+            }
+
+            if (by.get(0).contains("title")) {
+                filmList = filmStorage.searchFilmByTitle(query);
+            }
+        }
+
+        loadDataIntoFilm(filmList);
+        return filmList;
+    }
+
     private List<Film> getFilmsSortByLikes(long directorId) {
         List<Film> result = filmStorage.getDirectorsFilm(directorId).stream()
                 .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
