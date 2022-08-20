@@ -169,12 +169,23 @@ public class FilmService {
     public List<Film> searchFilms(String query, List<String> by) {
         List<Film> filmList = new ArrayList<>();
 
-        if (by.size() == 2 && isValidSearchParameter(by)) {
+        if (by.size() == 2) {
+            List<String> correctKey = List.of("director", "title");
+
+            by.forEach(k -> {
+                if (!correctKey.contains(k)) throw new ValidationDataException(String
+                        .format("Некорректный ключ поиска key=%s", k));
+            });
+
             filmList = filmStorage.searchFilmByTitleAndDirector(query);
-        } else {
-            if (by.contains("director")) {
+        }
+
+        if (by.size() == 1) {
+            if (by.get(0).contains("director")) {
                 filmList = filmStorage.searchFilmByDirector(query);
-            } else {
+            }
+
+            if (by.get(0).contains("title")) {
                 filmList = filmStorage.searchFilmByTitle(query);
             }
         }
@@ -221,10 +232,5 @@ public class FilmService {
             return false;
         else
             return true;
-    }
-
-    private boolean isValidSearchParameter(List<String> by) {
-        return by.get(0).contains("director") &&  by.get(1).contains("title") ||
-                by.get(0).contains("title") &&  by.get(1).contains("director");
     }
 }

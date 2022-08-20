@@ -210,7 +210,7 @@ public class FilmDbStorage implements FilmStorage {
     public List<Film> searchFilmByTitleAndDirector(String query) {
         String querySql = "%" + query + "%";
 
-        String sqlQuerySearchByTitleAndDirector = "SELECT FILMS.*, MPA_NAME, DIRECTOR_NAME FROM FILMS " +
+        String sqlQuerySearchByTitleAndDirector = "SELECT FILMS.*, MPA_NAME FROM FILMS " +
                 "JOIN MPA ON FILMS.mpa_id = MPA.mpa_id " +
                 "LEFT JOIN LIKES ON FILMS.film_id = LIKES.film_id " +
                 "LEFT JOIN FILM_DIRECTOR ON FILM_DIRECTOR.FILM_ID = FILMS.FILM_ID " +
