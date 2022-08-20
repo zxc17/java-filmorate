@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -81,5 +82,11 @@ public class FilmController {
     public List<Film> getCommonFilms(@RequestParam long userId,
                                      @RequestParam long friendId) {
         return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @GetMapping("/films/search")
+    public List<Film> searchFilms(@RequestParam String query,
+                                  @RequestParam @NotNull List<String> by) {
+        return filmService.searchFilms(query, by);
     }
 }

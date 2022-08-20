@@ -178,6 +178,50 @@ public class FilmDbStorage implements FilmStorage {
         return jdbcTemplate.query(sql, this::mapRowToFilm, user1Id, user2Id);
     }
 
+    @Override
+    public List<Film> searchFilmByTitle(String query) {
+        String querySql = "%" + query + "%";
+        String sqlQuerySearchByTitle = "SELECT FILMS.*, MPA_NAME FROM FILMS " +
+                "JOIN MPA ON FILMS.mpa_id = MPA.mpa_id " +
+                "LEFT JOIN LIKES ON FILMS.film_id = LIKES.film_id " +
+                "WHERE LOWER(FILMS.FILM_NAME) LIKE LOWER(?) " +
+                "GROUP BY FILMS.film_id " +
+                "ORDER BY COUNT (LIKES.user_id) DESC ";
+
+        return jdbcTemplate.query(sqlQuerySearchByTitle, this::mapRowToFilm, querySql);
+    }
+
+    @Override
+    public List<Film> searchFilmByDirector(String query) {
+        String querySql = "%" + query + "%";
+        String sqlQuerySearchByDirector = "SELECT FILMS.*, MPA_NAME FROM FILMS " +
+                "JOIN MPA ON FILMS.mpa_id = MPA.mpa_id " +
+                "LEFT JOIN LIKES ON FILMS.film_id = LIKES.film_id " +
+                "JOIN FILM_DIRECTOR ON FILM_DIRECTOR.FILM_ID = LIKES.FILM_ID " +
+                "JOIN DIRECTORS ON DIRECTORS.DIRECTOR_ID = FILM_DIRECTOR.DIRECTOR_ID " +
+                "WHERE LOWER(DIRECTORS.DIRECTOR_NAME) LIKE LOWER(?) " +
+                "GROUP BY FILMS.film_id " +
+                "ORDER BY COUNT (LIKES.user_id) DESC ";
+
+        return jdbcTemplate.query(sqlQuerySearchByDirector, this::mapRowToFilm, querySql);
+    }
+
+    @Override
+    public List<Film> searchFilmByTitleAndDirector(String query) {
+        String querySql = "%" + query + "%";
+
+        String sqlQuerySearchByTitleAndDirector = "SELECT FILMS.*, MPA_NAME, DIRECTOR_NAME FROM FILMS " +
+                "JOIN MPA ON FILMS.mpa_id = MPA.mpa_id " +
+                "LEFT JOIN LIKES ON FILMS.film_id = LIKES.film_id " +
+                "LEFT JOIN FILM_DIRECTOR ON FILM_DIRECTOR.FILM_ID = FILMS.FILM_ID " +
+                "LEFT JOIN DIRECTORS ON DIRECTORS.DIRECTOR_ID = FILM_DIRECTOR.DIRECTOR_ID " +
+                "WHERE LOWER(DIRECTORS.DIRECTOR_NAME) LIKE LOWER(?) OR LOWER(FILMS.FILM_NAME) LIKE LOWER(?)" +
+                "GROUP BY FILMS.film_id " +
+                "ORDER BY COUNT (LIKES.user_id) DESC ";
+
+        return jdbcTemplate.query(sqlQuerySearchByTitleAndDirector, this::mapRowToFilm, querySql, querySql);
+    }
+
     private Film mapRowToFilm(ResultSet resultSet, int numRow) throws SQLException {
         return Film.builder()
                 .id(resultSet.getLong("FILM_ID"))
