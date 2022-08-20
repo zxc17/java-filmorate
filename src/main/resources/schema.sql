@@ -84,3 +84,14 @@ create table if not exists FILM_DIRECTOR
     DIRECTOR_ID integer not null references DIRECTORS (DIRECTOR_ID) on delete cascade,
     primary key (FILM_ID, DIRECTOR_ID)
 );
+
+create table if not exists EVENTS
+(
+    EVENT_ID integer not null primary key auto_increment,
+    TIME_STAMP bigint not null,
+    EVENT_TYPE varchar(255) not null,
+    OPERATION varchar(255) not null,
+    USER_ID integer not null references USERS (USER_ID) on delete cascade,
+    ENTITY_ID integer not null
+);
+

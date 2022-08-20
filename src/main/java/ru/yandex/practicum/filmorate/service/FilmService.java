@@ -4,8 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
+import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.OperationType;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmDirectorStorage;
 import ru.yandex.practicum.filmorate.storage.FilmGenreStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -31,6 +34,7 @@ public class FilmService {
     final MpaStorage mpaStorage;
     final FilmDirectorStorage filmDirectorStorage;
     final DirectorStorage directorStorage;
+    final EventStorage eventStorage;
 
     public Film add(Film f) {
         if (!isValidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");
@@ -99,6 +103,7 @@ public class FilmService {
         if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
         likesStorage.add(filmId, userId);
+        eventStorage.addEvent(userId, filmId, EventType.LIKE, OperationType.ADD);
     }
 
     public long getLikeCount(long id) {
@@ -111,6 +116,7 @@ public class FilmService {
         if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
         likesStorage.remove(filmId, userId);
+        eventStorage.addEvent(userId, filmId, EventType.LIKE, OperationType.REMOVE);
     }
 
     public List<Film> getPopularFilmList(Integer count, Integer year, Integer genreId) {
