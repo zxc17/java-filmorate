@@ -205,7 +205,7 @@ public class FilmService {
         return result;
     }
 
-    private void loadDataIntoFilm(List<Film> films) {
+    void loadDataIntoFilm(List<Film> films) {
         films.forEach(film -> {
             film.setGenres(filmGenreStorage.get(film.getId()).stream()
                     .map(genreStorage::get)

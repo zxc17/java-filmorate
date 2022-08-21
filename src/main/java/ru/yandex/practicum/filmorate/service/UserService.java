@@ -7,13 +7,19 @@ import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundExceptio
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.OperationType;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.FriendsStorage;
+import ru.yandex.practicum.filmorate.storage.LikesDbStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +28,9 @@ public class UserService {
     final UserStorage userStorage;
     final FriendsStorage friendsStorage;
     final EventStorage eventStorage;
+    final LikesDbStorage likesDbStorage;
+    final FilmStorage filmStorage;
+    final FilmService filmService;
 
     public User add(User u) {
         if (!isValidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
@@ -101,6 +110,47 @@ public class UserService {
                 .map(userStorage::get)
                 .collect(Collectors.toList());
         result.forEach(user -> user.setFriends(friendsStorage.getList(user.getId())));
+        return result;
+    }
+
+    public List<Film> getRecomendation(long userId) {
+        // Для каждого юзера создается мапа фильм-оценка.
+        Map<User, Map<Film, Double>> data = new HashMap<>();
+        List<User> userList = userStorage.getAll();
+        // Заполнение данных.
+        userList.forEach(u -> data.put(u, likesDbStorage.getFullListByUser(u.getId())));
+        // Вычленяем данные обрабатываемого юзера.
+        User user = userStorage.get(userId);
+        Map<Film, Double> userData = data.get(user);
+        // Убираем его из общей базы.
+        data.remove(user);
+
+        //Приступаем к обработке.
+        Map<Film, Double> nearestUserData = null;
+        long amountOfHit = 0;
+        for (Map.Entry<User, Map<Film, Double>> entryData : data.entrySet()) {
+            long checkedAmountOfHit = 0;
+            for (Map.Entry<Film, Double> entryFilmForCheckedUser : entryData.getValue().entrySet()) {
+                // Ищем совпадение оценок.
+                // На данном этапе есть только лайки, т.е. в поле Double может быть лишь единица,
+                // поэтому просто проверяем наличие.
+                if (userData.containsKey(entryFilmForCheckedUser.getKey()))
+                    checkedAmountOfHit++;
+            }
+            if (checkedAmountOfHit > amountOfHit) {
+                amountOfHit = checkedAmountOfHit;
+                nearestUserData = entryData.getValue();
+            }
+        }
+        List<Film> result = new ArrayList<>();
+        // Ищем фильмы с лайками, которые есть у ближайшего юзера, но не у проверяемого.
+        if (nearestUserData != null) {
+            for (Map.Entry<Film, Double> entry : nearestUserData.entrySet()) {
+                if (!userData.containsKey(entry.getKey()))
+                    result.add(entry.getKey());
+            }
+        }
+        filmService.loadDataIntoFilm(result);
         return result;
     }
 
