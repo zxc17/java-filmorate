@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.customExceptions.StorageException;
@@ -12,7 +11,6 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-@Primary
 public class ReviewLikesDbStorage implements ReviewLikesStorage {
     private final JdbcTemplate jdbcTemplate;
 
