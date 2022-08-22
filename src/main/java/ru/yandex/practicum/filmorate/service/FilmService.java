@@ -120,7 +120,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilmList(Integer count, Integer year, Integer genreId) {
-        List<Film> filmList = null;
+        List<Film> filmList;
 
         if (year != null && genreId == null) {
             filmList = filmStorage.getPopularFilmsByYear(year, count);
