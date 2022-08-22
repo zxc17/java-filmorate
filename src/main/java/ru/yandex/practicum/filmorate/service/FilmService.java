@@ -41,12 +41,12 @@ public class FilmService {
         if (f.getMpa().getName() == null)
             f.setMpa(mpaStorage.get(f.getMpa().getId()));
         filmStorage.add(f);
-        if (f.getGenres() != null) {
+        if (f.getGenres() != null && !f.getGenres().isEmpty()) {
             filmGenreStorage.update(f.getId(), f.getGenres());
             // Чтобы в возврате было всё корректно, прописываем genre_name
             f.setGenres(genreStorage.getNames(f.getGenres()));
         }
-        if (f.getDirectors() != null) {
+        if (f.getDirectors() != null && !f.getDirectors().isEmpty()) {
             filmDirectorStorage.updateDirectorByFilm(f.getId(), f.getDirectors());
             f.setDirectors(directorStorage.getNames(f.getDirectors()));
         }
@@ -157,7 +157,7 @@ public class FilmService {
         if (sort.equals("year")) {
             result = filmStorage.getDirectorsFilmSortByYears(directorId);
         } else if (sort.equals("likes")) {
-            result = getDirectorsFilmsSortByLikes(directorId);
+            result = filmStorage.getDirectorsFilmSortByLikes(directorId);
         } else {
             throw new ValidationDataException(String
                     .format("Сортирока может быть только по year и likes. Указана сортировка = %s", sort));
@@ -194,15 +194,6 @@ public class FilmService {
 
         loadDataIntoFilm(filmList);
         return filmList;
-    }
-
-    private List<Film> getDirectorsFilmsSortByLikes(long directorId) {
-        if (directorStorage.getById(directorId) == null) throw new ValidationNotFoundException(String
-                .format("directorId=%s не найден.", directorId));
-
-        List<Film> result = filmStorage.getDirectorsFilmSortByLikes(directorId);
-        loadDataIntoFilm(result);
-        return result;
     }
 
     void loadDataIntoFilm(List<Film> films) {
