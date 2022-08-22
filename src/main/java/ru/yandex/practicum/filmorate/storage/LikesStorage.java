@@ -15,7 +15,7 @@ public interface LikesStorage {
      * @param userId UserID
      * @return Мапа <filmID, like> фильмов-оценок указанного юзера, включая неоцененные.
      */
-    HashMap<Film, Double> getFullListByUser(long userId);
+    HashMap<Film, Double> getLikeListByUser(long userId);
 
     void remove(long filmId, long userId);
 }

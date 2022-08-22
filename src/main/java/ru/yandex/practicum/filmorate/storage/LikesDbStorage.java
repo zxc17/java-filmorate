@@ -36,7 +36,7 @@ public class LikesDbStorage implements LikesStorage {
     }
 
     @Override
-    public HashMap<Film, Double> getFullListByUser(long userId) {
+    public HashMap<Film, Double> getLikeListByUser(long userId) {
         String sql = "" +
                 "select FILMS.*, MPA_NAME, USER_ID " +
                 "from FILMS " +

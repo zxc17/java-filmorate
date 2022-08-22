@@ -120,7 +120,7 @@ public class UserService {
         Map<User, Map<Film, Double>> data = new HashMap<>();
         List<User> userList = userStorage.getAll();
         // Заполнение данных.
-        userList.forEach(u -> data.put(u, likesDbStorage.getFullListByUser(u.getId())));
+        userList.forEach(u -> data.put(u, likesDbStorage.getLikeListByUser(u.getId())));
         // Вычленяем данные обрабатываемого юзера.
         User user = userStorage.get(userId);
         Map<Film, Double> userData = data.get(user);
