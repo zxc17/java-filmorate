@@ -120,7 +120,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilmList(Integer count, Integer year, Integer genreId) {
-        List<Film> filmList = null;
+        List<Film> filmList;
 
         if (year != null && genreId == null) {
             filmList = filmStorage.getPopularFilmsByYear(year, count);
@@ -205,7 +205,7 @@ public class FilmService {
         return result;
     }
 
-    private void loadDataIntoFilm(List<Film> films) {
+    void loadDataIntoFilm(List<Film> films) {
         films.forEach(film -> {
             film.setGenres(filmGenreStorage.get(film.getId()).stream()
                     .map(genreStorage::get)
