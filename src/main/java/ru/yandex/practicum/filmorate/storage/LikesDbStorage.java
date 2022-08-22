@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
-@Primary
 public class LikesDbStorage implements LikesStorage {
     private final JdbcTemplate jdbcTemplate;
 
@@ -76,5 +74,4 @@ public class LikesDbStorage implements LikesStorage {
     private Long mapRowToLike(ResultSet resultSet, int numRow) throws SQLException {
         return resultSet.getLong("USER_ID");
     }
-
 }

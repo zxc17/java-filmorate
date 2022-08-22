@@ -35,7 +35,7 @@ public class UserService {
     final FilmService filmService;
 
     public User add(User u) {
-        if (!isValidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
+        if (isInvalidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
         userStorage.add(u);
         if (u.getFriends() != null)
             friendsStorage.update(u.getId(), u.getFriends());
@@ -43,7 +43,7 @@ public class UserService {
     }
 
     public User update(User u) {
-        if (!isValidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
+        if (isInvalidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
         if (userStorage.get(u.getId()) == null) throw new ValidationNotFoundException(
                 String.format("Невозможно обновить данные пользователя, id=%s не найден.", u.getId()));
         userStorage.update(u);
@@ -133,11 +133,11 @@ public class UserService {
                 Comparator.comparingLong((Long k) -> k).reversed());
         for (Map.Entry<User, Map<Film, Double>> entryData : data.entrySet()) {
             long amountOfHit = 0;
-            for (Map.Entry<Film, Double> entryFilmForCheckedUser : entryData.getValue().entrySet()) {
+            for (Map.Entry<Film, Double> entryFilmsForCheckedUser : entryData.getValue().entrySet()) {
                 // Ищем совпадение оценок.
                 // На данном этапе есть только лайки, т.е. в поле Double может быть лишь единица,
                 // поэтому просто проверяем наличие.
-                if (userData.containsKey(entryFilmForCheckedUser.getKey()))
+                if (userData.containsKey(entryFilmsForCheckedUser.getKey()))
                     amountOfHit++;
             }
             // Данные пользователя, у которого есть совпадения, сохраняем. Ключ - кол-во совпадений.
@@ -165,7 +165,7 @@ public class UserService {
         return eventStorage.getFeedForUser(userId);
     }
 
-    private boolean isValidUser(User u) {
+    private boolean isInvalidUser(User u) {
         if (u == null ||
                 u.getLogin() == null ||
                 u.getEmail() == null ||
@@ -174,11 +174,11 @@ public class UserService {
                 u.getLogin().isBlank() || u.getLogin().contains(" ") ||
                 u.getBirthday().isAfter(LocalDate.now())
         )
-            return false;
+            return true;
         else {
             if (u.getName() == null || u.getName().isBlank())
                 u.setName(u.getLogin());
-            return true;
+            return false;
         }
     }
 }

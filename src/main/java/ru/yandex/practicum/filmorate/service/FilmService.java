@@ -19,7 +19,6 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,17 +36,17 @@ public class FilmService {
     final EventStorage eventStorage;
 
     public Film add(Film f) {
-        if (!isValidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");
+        if (isInvalidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");
         // Чтобы в возврате было всё корректно, прописываем mpa_name
         if (f.getMpa().getName() == null)
             f.setMpa(mpaStorage.get(f.getMpa().getId()));
         filmStorage.add(f);
-        if (f.getGenres() != null) {
+        if (f.getGenres() != null && !f.getGenres().isEmpty()) {
             filmGenreStorage.update(f.getId(), f.getGenres());
             // Чтобы в возврате было всё корректно, прописываем genre_name
             f.setGenres(genreStorage.getNames(f.getGenres()));
         }
-        if (f.getDirectors() != null) {
+        if (f.getDirectors() != null && !f.getDirectors().isEmpty()) {
             filmDirectorStorage.updateDirectorByFilm(f.getId(), f.getDirectors());
             f.setDirectors(directorStorage.getNames(f.getDirectors()));
         }
@@ -70,7 +69,7 @@ public class FilmService {
     }
 
     public Film update(Film f) {
-        if (!isValidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");
+        if (isInvalidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");
         if (filmStorage.get(f.getId()) == null) throw new ValidationNotFoundException(
                 String.format("Невозможно обновить данные фильма, id=%s не найден.", f.getId()));
         // Чтобы в возврате было всё корректно, прописываем mpa_name
@@ -119,41 +118,52 @@ public class FilmService {
         eventStorage.addEvent(userId, filmId, EventType.LIKE, OperationType.REMOVE);
     }
 
-    public List<Film> getPopularFilmList(Integer count, Integer year, Integer genreId) {
+    public List<Film> getPopularFilmList(Integer count, Integer year, Long genreId) {
         List<Film> filmList;
+        if (count <= 0) throw new ValidationDataException(String
+                .format("Недопустимон значение count=%d.", count));
 
+        // Фильтр по годам.
         if (year != null && genreId == null) {
+            if (year <= 0) throw new ValidationDataException(String
+                    .format("Недопустимое значение year=%d.", year));
             filmList = filmStorage.getPopularFilmsByYear(year, count);
+            // Фильтр по жанрам.
         } else if (genreId != null && year == null) {
+            if (genreStorage.get(genreId) == null) throw new ValidationNotFoundException(String
+                    .format("genreId=%s не найден.", genreId));
             filmList = filmStorage.getPopularFilmsByGenre(genreId, count);
+            // Фильтр по годам и жанрам.
         } else if (genreId != null && year != null) {
+            if (year <= 0) throw new ValidationDataException(String
+                    .format("Недопустимое значение year=%d.", year));
+            if (genreStorage.get(genreId) == null) throw new ValidationNotFoundException(String
+                    .format("genreId=%s не найден.", genreId));
             filmList = filmStorage.getPopularFilmsByYearAndGenre(year, genreId, count);
+            // Без фильтра.
         } else {
-            filmList = filmStorage.getAll().stream()
-                    .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
-                    .limit(count)
-                    .collect(Collectors.toList());
+            filmList = filmStorage.getPopularFilms(count);
         }
 
         loadDataIntoFilm(filmList);
-
         return filmList;
     }
 
     public List<Film> getSortedListByDirectors(long directorId, String sort) {
+        if (directorStorage.getById(directorId) == null) throw new ValidationNotFoundException(String
+                .format("directorId=%s не найден.", directorId));
+        List<Film> result;
+
         if (sort.equals("year")) {
-            List<Film> result = new ArrayList<>(filmStorage.getDirectorsFilmSortByYears(directorId));
-            if (result.size() == 0) {
-                throw new ValidationNotFoundException(String.format("directorId=%s не найден.", directorId));
-            }
-            loadDataIntoFilm(result);
-            return result;
+            result = filmStorage.getDirectorsFilmSortByYears(directorId);
         } else if (sort.equals("likes")) {
-            return getFilmsSortByLikes(directorId);
+            result = filmStorage.getDirectorsFilmSortByLikes(directorId);
         } else {
-            throw new ValidationNotFoundException(
-                    String.format("Сортирока может быть только по year и likes. Указана сортировка = %s", sort));
+            throw new ValidationDataException(String
+                    .format("Сортирока может быть только по year и likes. Указана сортировка = %s", sort));
         }
+        loadDataIntoFilm(result);
+        return result;
     }
 
     public List<Film> getCommonFilms(long user1Id, long user2Id) {
@@ -167,42 +177,23 @@ public class FilmService {
     }
 
     public List<Film> searchFilms(String query, List<String> by) {
+        List<String> correctKey = List.of("director", "title");
+        by.forEach(k -> {
+            if (!correctKey.contains(k)) throw new ValidationDataException(String
+                    .format("Некорректный ключ поиска key=%s", k));
+        });
         List<Film> filmList = new ArrayList<>();
 
         if (by.size() == 2) {
-            List<String> correctKey = List.of("director", "title");
-
-            by.forEach(k -> {
-                if (!correctKey.contains(k)) throw new ValidationDataException(String
-                        .format("Некорректный ключ поиска key=%s", k));
-            });
-
             filmList = filmStorage.searchFilmByTitleAndDirector(query);
-        }
-
-        if (by.size() == 1) {
-            if (by.get(0).contains("director")) {
-                filmList = filmStorage.searchFilmByDirector(query);
-            }
-
-            if (by.get(0).contains("title")) {
-                filmList = filmStorage.searchFilmByTitle(query);
-            }
+        } else if (by.get(0).contains("director")) {
+            filmList = filmStorage.searchFilmByDirector(query);
+        } else if (by.get(0).contains("title")) {
+            filmList = filmStorage.searchFilmByTitle(query);
         }
 
         loadDataIntoFilm(filmList);
         return filmList;
-    }
-
-    private List<Film> getFilmsSortByLikes(long directorId) {
-        List<Film> result = filmStorage.getDirectorsFilm(directorId).stream()
-                .sorted(Comparator.comparing((Film f) -> getLikeCount(f.getId())).reversed())
-                .collect(Collectors.toList());
-        if (result.size() == 0) {
-            throw new ValidationNotFoundException(String.format("directorId=%s не найден.", directorId));
-        }
-        loadDataIntoFilm(result);
-        return result;
     }
 
     void loadDataIntoFilm(List<Film> films) {
@@ -217,7 +208,7 @@ public class FilmService {
         });
     }
 
-    private boolean isValidFilm(Film f) {
+    private boolean isInvalidFilm(Film f) {
         if (f == null ||
                 f.getName() == null ||
                 f.getDescription() == null ||
@@ -229,8 +220,8 @@ public class FilmService {
                 f.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28)) ||
                 f.getDuration() <= 0
         )
-            return false;
-        else
             return true;
+        else
+            return false;
     }
 }
