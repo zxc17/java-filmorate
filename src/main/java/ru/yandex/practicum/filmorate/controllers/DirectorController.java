@@ -23,40 +23,31 @@ public class DirectorController {
     @GetMapping("/directors")
     public Set<Director> getAll() {
         log.info("Начато выполнение \"Получить всех всех режиссеров.\"");
-        Set<Director> result = directorService.getAll();
-        log.info("Закончено выполнение \"Получить всех всех режиссеров.\"");
-        return result;
+        return directorService.getAll();
     }
 
     @GetMapping("/directors/{id}")
     public Director get(@PathVariable long id) {
         log.info("Начато выполнение \"Получить режиссера по ID.\"");
-        Director result = directorService.getById(id);
-        log.info("Закончено выполнение \"Получить режиссера по ID.\"");
-        return result;
+        return directorService.getById(id);
     }
 
     @PostMapping("/directors")
     public Director add(@RequestBody Director d) {
         log.info("Начато выполнение \"Добавить режиссера.\"");
-        Director result = directorService.add(d);
-        log.info("Закончено выполнение \"Добавить режиссера.\"");
-        return result;
+        return directorService.add(d);
     }
 
     @PutMapping("/directors")
     public Director update(@RequestBody Director d) {
         log.info("Начато выполнение \"Обновить режиссера.\"");
-        Director result = directorService.update(d);
-        log.info("Закончено выполнение \"Обновить режиссера.\"");
-        return result;
+        return directorService.update(d);
     }
 
     @DeleteMapping("/directors/{id}")
     public void remove(@PathVariable long id) {
         log.info("Начато выполнение \"Удалить режиссера.\"");
         directorService.remove(id);
-        log.info("Закончено выполнение \"Удалить режиссера.\"");
     }
 
 }

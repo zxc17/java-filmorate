@@ -19,17 +19,13 @@ public class GenreController {
     @GetMapping("/genres/{id}")
     public Genre get(@PathVariable long id) {
         log.info("Начато выполнение \"Получить жанр.\"");
-        Genre result = genreService.get(id);
-        log.info("Закончено выполнение \"Получить жанр.\"");
-        return result;
+        return genreService.get(id);
     }
 
     @GetMapping("/genres")
     public Set<Genre> getAll() {
         log.info("Начато выполнение \"Получить все жанры.\"");
-        Set<Genre> result = genreService.getAll();
-        log.info("Закончено выполнение \"Получить все жанры.\"");
-        return result;
+        return genreService.getAll();
     }
 
 }

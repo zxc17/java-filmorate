@@ -24,72 +24,55 @@ public class ReviewController {
     @PostMapping("/reviews")
     public Review add(@RequestBody Review review) {
         log.info("Начато выполнение \"Добавить отзыв.\"");
-        Review result = reviewService.add(review);
-        log.info("Закончено выполнение \"Добавить отзыв.\"");
-        return result;
+        return reviewService.add(review);
     }
 
     @GetMapping("/reviews/{id}")
     public Review get(@PathVariable Long id) {
         log.info("Начато выполнение \"Получить отзыв по ID.\"");
-        Review result = reviewService.get(id);
-        log.info("Закончено выполнение \"Получить отзыв по ID.\"");
-        return result;
+        return reviewService.get(id);
     }
 
     @GetMapping("/reviews")
     public List<Review> getList(@RequestParam(required = false) Long filmId,
                                 @RequestParam(defaultValue = "10", required = false) Integer count) {
         log.info("Начато выполнение \"Получить список отзывов фильма.\"");
-        List<Review> result = reviewService.getList(filmId, count);
-        log.info("Закончено выполнение \"Получить список отзывов фильма.\"");
-        return result;
+        return reviewService.getList(filmId, count);
     }
 
     @PutMapping("/reviews")
     public Review update(@RequestBody Review review) {
         log.info("Начато выполнение \"Обновить отзыв.\"");
-        Review result = reviewService.update(review);
-        log.info("Закончено выполнение \"Обновить отзыв.\"");
-        return result;
+        return reviewService.update(review);
     }
 
     @DeleteMapping("/reviews/{id}")
     public void remove(@PathVariable Long id) {
         log.info("Начато выполнение \"Удалить отзыв по ID.\"");
         reviewService.remove(id);
-        log.info("Закончено выполнение \"Удалить отзыв по ID.\"");
     }
 
     @PutMapping("/reviews/{id}/like/{userId}")
     public Review addLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Начато выполнение \"Добавить лайк отзыву.\"");
-        Review result = reviewService.changeUseful(id, userId, true, true);
-        log.info("Закончено выполнение \"Добавить лайк отзыву.\"");
-        return result;
+        return reviewService.changeUseful(id, userId, true, true);
     }
 
     @PutMapping("/reviews/{id}/dislike/{userId}")
     public Review addDisLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Начато выполнение \"Добавить дизлайк отзыву.\"");
-        Review result = reviewService.changeUseful(id, userId, true, false);
-        log.info("Закончено выполнение \"Добавить дизлайк отзыву.\"");
-        return result;
+        return reviewService.changeUseful(id, userId, true, false);
     }
 
     @DeleteMapping("/reviews/{id}/like/{userId}")
     public Review removeLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Начато выполнение \"Удалить лайк отзыву.\"");
-        Review result = reviewService.changeUseful(id, userId, false, true);
-        log.info("Закончено выполнение \"Удалить лайк отзыву.\"");
-        return result;
+        return reviewService.changeUseful(id, userId, false, true);
     }
 
     @DeleteMapping("/reviews/{id}/dislike/{userId}")
     public Review removeDislike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Начато выполнение \"Удалить дизлайк отзыву.\"");
-        Review result = reviewService.changeUseful(id, userId, false, false);
-        log.info("Закончено выполнение \"Удалить дизлайк отзыву.\"");
-        return result;
+        return reviewService.changeUseful(id, userId, false, false);
     }
 }

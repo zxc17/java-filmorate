@@ -25,61 +25,49 @@ public class FilmController {
     @PostMapping("/films")
     public Film add(@RequestBody Film f) {
         log.info("Начато выполнение \"Добавить фильм.\"");
-        Film result =  filmService.add(f);
-        log.info("Закончено выполнение \"Добавить фильм.\"");
-        return result;
+        return filmService.add(f);
     }
 
     @GetMapping("/films/{id}")
     public Film get(@PathVariable long id) {
         log.info("Начато выполнение \"Получить фильм по ID.\"");
-        Film result = filmService.get(id);
-        log.info("Закончено выполнение \"Получить фильм по ID.\"");
-        return result;
+        return filmService.get(id);
     }
 
     @GetMapping("/films")
     public List<Film> getAll() {
         log.info("Начато выполнение \"Получить все фильмы.\"");
-        List<Film> result = filmService.getAll();
-        log.info("Закончено выполнение \"Получить все фильмы.\"");
-        return result;
+        return filmService.getAll();
     }
 
     @PutMapping("/films")
     public Film update(@RequestBody Film f) {
         log.info("Начато выполнение \"Обновить фильм.\"");
-        Film result =  filmService.update(f);
-        log.info("Закончено выполнение \"Обновить фильм.\"");
-        return result;
+        return filmService.update(f);
     }
 
     @DeleteMapping("/films/{id}")
     public void remove(@PathVariable long id) {
         log.info("Начато выполнение \"Удалить фильм по ID.\"");
         filmService.remove(id);
-        log.info("Закончено выполнение \"Удалить фильм по ID.\"");
     }
 
     @DeleteMapping("/films")
     public void clear() {
         log.info("Начато выполнение \"Удалить все фильмы.\"");
         filmService.clear();
-        log.info("Закончено выполнение \"Удалить все фильмы.\"");
     }
 
     @PutMapping("/films/{id}/like/{userId}")
     public void addLike(@PathVariable long id, @PathVariable long userId) {
         log.info("Начато выполнение \"Добавить лайк фильму.\"");
         filmService.addLike(id, userId);
-        log.info("Закончено выполнение \"Добавить лайк фильму.\"");
     }
 
     @DeleteMapping("/films/{id}/like/{userId}")
     public void removeLike(@PathVariable long id, @PathVariable long userId) {
         log.info("Начато выполнение \"Удалить лайк фильму.\"");
         filmService.removeLike(id, userId);
-        log.info("Закончено выполнение \"Удалить лайк фильму.\"");
     }
 
     @GetMapping("/films/popular")
@@ -87,9 +75,7 @@ public class FilmController {
                                          @RequestParam(required = false) Integer year,
                                          @RequestParam(required = false) Long genreId) {
         log.info("Начато выполнение \"Получить список популярных фильмов.\"");
-        List<Film> result =  filmService.getPopularFilmList(count, year, genreId);
-        log.info("Закончено выполнение \"Получить список популярных фильмов.\"");
-        return result;
+        return filmService.getPopularFilmList(count, year, genreId);
     }
 
     @GetMapping("/films/director/{directorId}")
@@ -97,26 +83,20 @@ public class FilmController {
             @PathVariable long directorId,
             @RequestParam(value = "sortBy", required = false) String sort) {
         log.info("Начато выполнение \"Получить список фильмов, отсортированных по режиссеру.\"");
-        List<Film> result =  filmService.getSortedListByDirectors(directorId, sort);
-        log.info("Закончено выполнение \"Получить список фильмов, отсортированных по режиссеру.\"");
-        return result;
+        return filmService.getSortedListByDirectors(directorId, sort);
     }
 
     @GetMapping("/films/common")
     public List<Film> getCommonFilms(@RequestParam long userId,
                                      @RequestParam long friendId) {
         log.info("Начато выполнение \"Получить список фильмов с взаимными лайками.\"");
-        List<Film> result = filmService.getCommonFilms(userId, friendId);
-        log.info("Закончено выполнение \"Получить список фильмов с взаимными лайками.\"");
-        return result;
+        return filmService.getCommonFilms(userId, friendId);
     }
 
     @GetMapping("/films/search")
     public List<Film> searchFilms(@RequestParam String query,
                                   @RequestParam @NotNull List<String> by) {
         log.info("Начато выполнение \"Поиск фильмов.\"");
-        List<Film> result = filmService.searchFilms(query, by);
-        log.info("Закончено выполнение \"Поиск фильмов.\"");
-        return result;
+        return filmService.searchFilms(query, by);
     }
 }
