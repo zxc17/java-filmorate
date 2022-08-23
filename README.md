@@ -10,4 +10,4 @@
 7. Функциональность «Поиск» (Дмитрий Печагин)
 8. Функциональность «Рекомендации» (Андрей Зараев)
 
-![Схема БД](https://github.com/zxc17/java-filmorate/blob/add-database/DB.png)
+![Схема БД](https://github.com/zxc17/java-filmorate/blob/develop/DB.png)
