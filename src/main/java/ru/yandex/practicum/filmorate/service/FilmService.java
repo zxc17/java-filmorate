@@ -25,15 +25,15 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class FilmService {
-    final FilmStorage filmStorage;
-    final UserStorage userStorage;
-    final FilmGenreStorage filmGenreStorage;
-    final LikesStorage likesStorage;
-    final GenreStorage genreStorage;
-    final MpaStorage mpaStorage;
-    final FilmDirectorStorage filmDirectorStorage;
-    final DirectorStorage directorStorage;
-    final EventStorage eventStorage;
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
+    private final FilmGenreStorage filmGenreStorage;
+    private final LikesStorage likesStorage;
+    private final GenreStorage genreStorage;
+    private final MpaStorage mpaStorage;
+    private final FilmDirectorStorage filmDirectorStorage;
+    private final DirectorStorage directorStorage;
+    private final EventStorage eventStorage;
 
     public Film add(Film f) {
         if (isInvalidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");

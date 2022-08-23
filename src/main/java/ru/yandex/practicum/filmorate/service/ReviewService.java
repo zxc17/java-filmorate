@@ -148,6 +148,16 @@ public class ReviewService {
         return reviewStorage.update(review, 1);
     }
 
+    public void updateUsefulForRemoveUser(Long userId) {
+        reviewLikesStorage.getUserLikes(userId).stream()
+                .map(reviewStorage::get)
+                .forEach(review -> review.setUseful(review.getUseful() - 1));
+        reviewDislikesStorage.getUserDislikes(userId).stream()
+                .map(reviewStorage::get)
+                .forEach(review -> review.setUseful(review.getUseful() + 1));
+        // Удаление самих записей из базы выполнится каскадно при удалении пользователя.
+    }
+
     private boolean isInvalidReview(Review review) {
         if (review.getIsPositive() == null ||
                 review.getFilmId() == null ||

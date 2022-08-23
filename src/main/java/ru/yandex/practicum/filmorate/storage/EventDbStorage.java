@@ -16,7 +16,6 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class EventDbStorage implements EventStorage {
-
     private final JdbcTemplate jdbcTemplate;
 
     @Override

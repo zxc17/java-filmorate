@@ -6,11 +6,10 @@ import ru.yandex.practicum.filmorate.customExceptions.ValidationDataException;
 import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundException;
 import ru.yandex.practicum.filmorate.model.Event;
 import ru.yandex.practicum.filmorate.model.EventType;
-import ru.yandex.practicum.filmorate.model.OperationType;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.OperationType;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.FriendsStorage;
 import ru.yandex.practicum.filmorate.storage.LikesDbStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -27,12 +26,12 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-    final UserStorage userStorage;
-    final FriendsStorage friendsStorage;
-    final EventStorage eventStorage;
-    final LikesDbStorage likesDbStorage;
-    final FilmStorage filmStorage;
-    final FilmService filmService;
+    private final UserStorage userStorage;
+    private final FriendsStorage friendsStorage;
+    private final EventStorage eventStorage;
+    private final LikesDbStorage likesDbStorage;
+    private final FilmService filmService;
+    private final ReviewService reviewService;
 
     public User add(User u) {
         if (isInvalidUser(u)) throw new ValidationDataException("Некорректные данные пользователя.");
@@ -68,6 +67,7 @@ public class UserService {
     public void remove(long id) {
         if (userStorage.get(id) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", id));
+        reviewService.updateUsefulForRemoveUser(id);
         userStorage.remove(id);
     }
 

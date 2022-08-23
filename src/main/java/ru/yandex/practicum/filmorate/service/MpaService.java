@@ -11,7 +11,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MpaService {
-    final MpaDbStorage mpaDbStorage;
+    private final MpaDbStorage mpaDbStorage;
 
     public Mpa get(long id) {
         Mpa result = mpaDbStorage.get(id);
