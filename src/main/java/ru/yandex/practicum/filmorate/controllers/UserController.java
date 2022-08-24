@@ -24,73 +24,73 @@ public class UserController {
 
     @PostMapping("/users")
     public User add(@RequestBody User u) {
-        log.info("Начато выполнение \"Добавить пользователя.\"");
+        log.info("Начато выполнение \"Добавить пользователя\".");
         return userService.add(u);
     }
 
     @GetMapping("/users/{id}")
     public User get(@PathVariable long id) {
-        log.info("Начато выполнение \"Получить пользователя по ID.\"");
+        log.info("Начато выполнение \"Получить пользователя по ID\".");
         return userService.get(id);
     }
 
     @GetMapping("/users")
     public List<User> getList() {
-        log.info("Начато выполнение \"Получить список всех пользователей.\"");
+        log.info("Начато выполнение \"Получить список всех пользователей\".");
         return userService.getAll();
     }
 
     @PutMapping("/users")
     public User update(@RequestBody User u) {
-        log.info("Начато выполнение \"Обновить пользователя.\"");
+        log.info("Начато выполнение \"Обновить пользователя\".");
         return userService.update(u);
     }
 
     @DeleteMapping(("/users/{id}"))
     public void remove(@PathVariable long id) {
-        log.info("Начато выполнение \"Удалить пользователя.\"");
+        log.info("Начато выполнение \"Удалить пользователя\".");
         userService.remove(id);
     }
 
     @DeleteMapping("/users")
     public void clear() {
-        log.info("Начато выполнение \"Удалить всех пользователей.\"");
+        log.info("Начато выполнение \"Удалить всех пользователей\".");
         userService.clear();
     }
 
     @PutMapping("/users/{id}/friends/{friendId}")
     public void addFriend(@PathVariable long id, @PathVariable long friendId) {
-        log.info("Начато выполнение \"Добавить друга.\"");
+        log.info("Начато выполнение \"Добавить друга\".");
         userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/users/{id}/friends/{friendId}")
     public void removeFriend(@PathVariable long id, @PathVariable long friendId) {
-        log.info("Начато выполнение \"Удалить друга.\"");
+        log.info("Начато выполнение \"Удалить друга\".");
         userService.removeFriend(id, friendId);
     }
 
     @GetMapping("/users/{id}/friends")
     public List<User> getFriendList(@PathVariable long id) {
-        log.info("Начато выполнение \"Получить список друзей.\"");
+        log.info("Начато выполнение \"Получить список друзей\".");
         return userService.getFriendList(id);
     }
 
     @GetMapping("/users/{id}/friends/common/{otherId}")
     public List<User> getCommonFriendList(@PathVariable long id, @PathVariable long otherId) {
-        log.info("Начато выполнение \"Получить список общих друзей.\"");
+        log.info("Начато выполнение \"Получить список общих друзей\".");
         return userService.getCommonFriendList(id, otherId);
     }
 
     @GetMapping("/users/{id}/feed")
     public List<Event> getFeed(@PathVariable long id) {
-        log.info("Начато выполнение \"Получить ленту событий пользователя.\"");
+        log.info("Начато выполнение \"Получить ленту событий пользователя\".");
         return userService.getFeedForUser(id);
     }
 
     @GetMapping("/users/{id}/recommendations")
     public List<Film> getRecommendation(@PathVariable long id) {
-        log.info("Начато выполнение \"Получить список рекомендаций.\"");
+        log.info("Начато выполнение \"Получить список рекомендаций\".");
         return userService.getRecommendation(id);
     }
 }

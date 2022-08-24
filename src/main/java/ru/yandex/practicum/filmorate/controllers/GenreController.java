@@ -18,13 +18,13 @@ public class GenreController {
 
     @GetMapping("/genres/{id}")
     public Genre get(@PathVariable long id) {
-        log.info("Начато выполнение \"Получить жанр.\"");
+        log.info("Начато выполнение \"Получить жанр\".");
         return genreService.get(id);
     }
 
     @GetMapping("/genres")
     public Set<Genre> getAll() {
-        log.info("Начато выполнение \"Получить все жанры.\"");
+        log.info("Начато выполнение \"Получить все жанры\".");
         return genreService.getAll();
     }
 

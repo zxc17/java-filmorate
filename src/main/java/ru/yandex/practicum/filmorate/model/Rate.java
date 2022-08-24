@@ -6,16 +6,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import javax.validation.constraints.NotNull;
-
 @Getter
 @Setter
 @Builder
 @ToString
-@EqualsAndHashCode(of = "id")
-public class Director {
-    @NotNull
-    private long id;
-    private String name;
-
+@EqualsAndHashCode(of = "userId")
+public class Rate {
+    private long userId;
+    private double rate;
 }

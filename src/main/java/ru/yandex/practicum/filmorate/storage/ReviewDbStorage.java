@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.jdbc.support.rowset.SqlRowSet;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.customExceptions.StorageException;
 import ru.yandex.practicum.filmorate.model.Review;
 
@@ -14,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class ReviewDbStorage implements ReviewStorage {
     private final JdbcTemplate jdbcTemplate;
@@ -95,6 +96,29 @@ public class ReviewDbStorage implements ReviewStorage {
                 "from REVIEWS as R " +
                 "order by R.USEFULNESS desc";
         return jdbcTemplate.query(sql, this::rowToReview);
+    }
+
+    @Override
+    public Map<Review, Boolean> getReviewListByUser(Long userId) {
+        String sql = "" +
+                "select R.*, RL.IS_POSITIVE as IS_LIKE " +
+                "from REVIEWS R " +
+                "join REVIEW_LIKES RL on R.REVIEW_ID = RL.REVIEW_ID " +
+                "where RL.USER_ID = ?";
+        SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, userId);
+        Map<Review, Boolean> result = new HashMap<>();
+        while (rowSet.next()) {
+            Review review = Review.builder()
+                    .reviewId(rowSet.getLong("REVIEW_ID"))
+                    .content(rowSet.getString("CONTENT"))
+                    .isPositive(rowSet.getBoolean("IS_POSITIVE"))
+                    .userId(rowSet.getLong("USER_ID"))
+                    .filmId(rowSet.getLong("FILM_ID"))
+                    .useful(rowSet.getInt("USEFULNESS"))
+                    .build();
+            result.put(review, rowSet.getBoolean("IS_LIKE"));
+        }
+        return result;
     }
 
     @Override

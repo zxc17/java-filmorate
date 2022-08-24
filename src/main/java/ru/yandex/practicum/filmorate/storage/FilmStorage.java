@@ -14,6 +14,8 @@ public interface FilmStorage {
 
     Film update(Film f);
 
+    double updateRate(long id, double rate);
+
     void remove(long id);
 
     void clear();
@@ -37,4 +39,8 @@ public interface FilmStorage {
     List<Film> searchFilmByTitleAndDirector(String query);
 
     List<Film> getPopularFilms(Integer count);
+
+    double calculateRate(long id);
+
+    List<Film> getRatedFilmListByUser(long userId);
 }

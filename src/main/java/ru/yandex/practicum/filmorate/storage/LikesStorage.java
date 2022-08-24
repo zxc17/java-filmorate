@@ -1,21 +1,24 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Rate;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 public interface LikesStorage {
 
-    void add(long filmId, long userId);
+    void put(long filmId, long userId, int rate);
 
-    Set<Long> get(long filmId);
+    Set<Rate> get(long filmId);
 
-    /**
-     * @param userId UserID
-     * @return Мапа <filmID, like> фильмов-оценок указанного юзера, включая неоцененные.
-     */
-    HashMap<Film, Double> getLikeListByUser(long userId);
+    void update(long filmId, Set<Rate> likes);
 
     void remove(long filmId, long userId);
+
+    /**
+     * Возвращает список id фильмов, оцененных пользователем.
+     *
+     * @param userId ID пользователя
+     */
+    List<Long> getIdFilmsRatedByUser(long userId);
 }
