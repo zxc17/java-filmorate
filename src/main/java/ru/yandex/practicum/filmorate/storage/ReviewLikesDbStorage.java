@@ -15,22 +15,34 @@ public class ReviewLikesDbStorage implements ReviewLikesStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    public void add(long reviewId, long userId) {
-        String sql = "insert into REVIEW_LIKES (REVIEW_ID, USER_ID) " +
-                "values (?, ?)";
-        if (jdbcTemplate.update(sql, reviewId, userId) == 0) throw new StorageException(
+    public void add(long reviewId, long userId, boolean isPositive) {
+        String sql = "insert into REVIEW_LIKES (REVIEW_ID, USER_ID, IS_POSITIVE) " +
+                "values (?, ?, ?)";
+        if (jdbcTemplate.update(sql, reviewId, userId, isPositive) == 0) throw new StorageException(
                 String.format("Ошибка при добавлении в таблицу REVIEW_LIKES, reviewID=%s, userID=%s.", reviewId, userId));
     }
 
     @Override
     public List<Long> getReviewLikes(long reviewId) {
-        String sql = "select USER_ID from REVIEW_LIKES where REVIEW_ID = ?";
+        String sql = "select USER_ID from REVIEW_LIKES where REVIEW_ID = ? and IS_POSITIVE = true";
+        return jdbcTemplate.query(sql, this::rowToUserId, reviewId);
+    }
+
+    @Override
+    public List<Long> getReviewDislikes(long reviewId) {
+        String sql = "select USER_ID from REVIEW_LIKES where REVIEW_ID = ? and IS_POSITIVE = false";
         return jdbcTemplate.query(sql, this::rowToUserId, reviewId);
     }
 
     @Override
     public List<Long> getUserLikes(long userId) {
-        String sql = "select REVIEW_ID from REVIEW_LIKES where USER_ID = ?";
+        String sql = "select REVIEW_ID from REVIEW_LIKES where USER_ID = ? and IS_POSITIVE = true";
+        return jdbcTemplate.query(sql, this::rowToReviewId, userId);
+    }
+
+    @Override
+    public List<Long> getUserDislikes(long userId) {
+        String sql = "select REVIEW_ID from REVIEW_LIKES where USER_ID = ? and IS_POSITIVE = false";
         return jdbcTemplate.query(sql, this::rowToReviewId, userId);
     }
 

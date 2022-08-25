@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.model.OperationType;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.ReviewDislikesStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewLikesStorage;
 import ru.yandex.practicum.filmorate.storage.ReviewStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -22,7 +21,6 @@ import java.util.stream.Collectors;
 public class ReviewService {
     private final ReviewStorage reviewStorage;
     private final ReviewLikesStorage reviewLikesStorage;
-    private final ReviewDislikesStorage reviewDislikesStorage;
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final EventStorage eventStorage;
@@ -107,26 +105,32 @@ public class ReviewService {
                 .format("reviewId=%s не найден.", id));
 
         List<Long> userLikes = reviewLikesStorage.getUserLikes(userId);
-        List<Long> userDislikes = reviewDislikesStorage.getUserDislikes(userId);
+        List<Long> userDislikes = reviewLikesStorage.getUserDislikes(userId);
 
         if (toAdd)          // добавить оценку
             if (isLike) {   // лайк
                 if (userLikes.contains(id)) throw new ValidationDataException(String
                         .format("userId=%s уже поставил лайк reviewId=%s.", userId, id));
+
+                // изменение оценки с дизлайка на лайк
                 if (userDislikes.contains(id)) {
-                    reviewDislikesStorage.remove(id, userId);
+                    reviewLikesStorage.remove(id, userId);
                     review.setUseful(review.getUseful() + 1);
                 }
-                reviewLikesStorage.add(id, userId);
+
+                reviewLikesStorage.add(id, userId, isLike);
                 review.setUseful(review.getUseful() + 1);
             } else {        // дизлайк
                 if (userDislikes.contains(id)) throw new ValidationDataException(String
                         .format("userId=%s уже поставил дизлайк reviewId=%s.", userId, id));
+
+                // изменение оценки с лайка на дизлайк
                 if (userLikes.contains(id)) {
                     reviewLikesStorage.remove(id, userId);
                     review.setUseful(review.getUseful() - 1);
                 }
-                reviewDislikesStorage.add(id, userId);
+
+                reviewLikesStorage.add(id, userId, isLike);
                 review.setUseful(review.getUseful() - 1);
             }
         else                // удалить оценку
@@ -135,6 +139,7 @@ public class ReviewService {
                         .format("userId=%s поставил дизлайк reviewId=%s, а не лайк.", userId, id));
                 if (!userLikes.contains(id)) throw new ValidationDataException(String
                         .format("userId=%s не поставил лайк reviewId=%s.", userId, id));
+
                 reviewLikesStorage.remove(id, userId);
                 review.setUseful(review.getUseful() - 1);
             } else {        // дизлайк
@@ -142,7 +147,8 @@ public class ReviewService {
                         .format("userId=%s поставил лайк reviewId=%s, а не дизлайк.", userId, id));
                 if (!userDislikes.contains(id)) throw new ValidationDataException(String
                         .format("userId=%s не поставил дизлайк reviewId=%s.", userId, id));
-                reviewDislikesStorage.remove(id, userId);
+
+                reviewLikesStorage.remove(id, userId);
                 review.setUseful(review.getUseful() + 1);
             }
         return reviewStorage.update(review, 1);
@@ -152,7 +158,7 @@ public class ReviewService {
         reviewLikesStorage.getUserLikes(userId).stream()
                 .map(reviewStorage::get)
                 .forEach(review -> review.setUseful(review.getUseful() - 1));
-        reviewDislikesStorage.getUserDislikes(userId).stream()
+        reviewLikesStorage.getUserDislikes(userId).stream()
                 .map(reviewStorage::get)
                 .forEach(review -> review.setUseful(review.getUseful() + 1));
         // Удаление самих записей из базы выполнится каскадно при удалении пользователя.
