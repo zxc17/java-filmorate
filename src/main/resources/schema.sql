@@ -62,14 +62,10 @@ create table if not exists REVIEWS
 
 create table if not exists REVIEW_LIKES
 (
-    REVIEW_ID integer not null references REVIEWS (REVIEW_ID) on delete cascade,
-    USER_ID   integer not null references USERS (USER_ID) on delete cascade
-);
-
-create table if not exists REVIEW_DISLIKES
-(
-    REVIEW_ID integer not null references REVIEWS (REVIEW_ID) on delete cascade,
-    USER_ID   integer not null references USERS (USER_ID) on delete cascade
+    REVIEW_ID   integer not null references REVIEWS (REVIEW_ID) on delete cascade,
+    USER_ID     integer not null references USERS (USER_ID) on delete cascade,
+    IS_POSITIVE boolean not null,
+    primary key (REVIEW_ID, USER_ID)
 );
 
 create table if not exists DIRECTORS
