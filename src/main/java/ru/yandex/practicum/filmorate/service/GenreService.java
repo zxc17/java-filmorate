@@ -11,7 +11,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class GenreService {
-    final GenreDbStorage genreDbStorage;
+    private final GenreDbStorage genreDbStorage;
 
     public Genre get(long id) {
         Genre result = genreDbStorage.get(id);

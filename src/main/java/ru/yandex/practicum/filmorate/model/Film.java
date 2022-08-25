@@ -1,7 +1,10 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.validation.constraints.NotBlank;
@@ -11,7 +14,10 @@ import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
+@ToString
 @Builder
 public class Film {
     private long id;
@@ -29,4 +35,6 @@ public class Film {
     private Mpa mpa;
     private Set<Genre> genres; //Может отсутствовать.
     private Set<Long> likes;
+    private Set<Director> directors;
+
 }

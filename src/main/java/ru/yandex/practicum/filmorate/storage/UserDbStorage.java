@@ -1,8 +1,9 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.customExceptions.StorageException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -10,23 +11,28 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-@Primary
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
     public User add(User u) {
-        String sql = "insert into USERS(LOGIN, USER_NAME, EMAIL, BIRTHDAY) " +
-                "VALUES (?, ?, ?, ?)";
-        if (jdbcTemplate.update(sql, u.getLogin(), u.getName(), u.getEmail(), u.getBirthday()) == 0)
-            throw new StorageException(String.format("Ошибка при добавлении в БД USERS, id=%s.", u.getId()));
-        //Последняя добавленная запись имеет максимальный ID, считываем его.
-        sql = "select max(USER_ID) from USERS";
-        u.setId(jdbcTemplate.queryForObject(sql, Long.class));
+        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
+        Map<String, Object> values = new HashMap<>();
+        values.put("LOGIN", u.getLogin());
+        values.put("USER_NAME", u.getName());
+        values.put("EMAIL", u.getEmail());
+        values.put("BIRTHDAY", u.getBirthday());
+        KeyHolder keyHolder = jdbcInsert
+                .withTableName("USERS")
+                .usingGeneratedKeyColumns("USER_ID")
+                .executeAndReturnKeyHolder(values);
+        u.setId(keyHolder.getKey().longValue());
         return u;
     }
 

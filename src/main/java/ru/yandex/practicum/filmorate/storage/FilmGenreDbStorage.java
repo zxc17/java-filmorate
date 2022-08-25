@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.customExceptions.StorageException;
@@ -15,7 +14,6 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-@Primary
 public class FilmGenreDbStorage implements FilmGenreStorage {
     private final JdbcTemplate jdbcTemplate;
 
@@ -30,7 +28,7 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
     @Override
     public List<Long> get(long filmId) {
         String sql = "select * from FILM_GENRE where FILM_ID = ?";
-        return jdbcTemplate.query(sql, this::mapRowToLike, filmId);
+        return jdbcTemplate.query(sql, this::mapRowToGenre, filmId);
     }
 
     @Override
@@ -46,7 +44,7 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
                 String.format("Ошибка при удалении из БД FILM_GENRE, filmID=%s, genreID=%s.", filmId, genreId));
     }
 
-    private Long mapRowToLike(ResultSet resultSet, int numRow) throws SQLException {
+    private Long mapRowToGenre(ResultSet resultSet, int numRow) throws SQLException {
         return resultSet.getLong("GENRE_ID");
     }
 }
