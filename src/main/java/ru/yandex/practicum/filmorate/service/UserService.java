@@ -161,7 +161,7 @@ public class UserService {
             // Если нашли рекомендации, то выходим. Нет - переходим к списку фильмов следующего юзера.
             if (result.size() > 0) break;
         }
-        filmService.loadDataIntoFilm(result);
+        filmService.loadDataIntoFilms(result);
         return result;
     }
 

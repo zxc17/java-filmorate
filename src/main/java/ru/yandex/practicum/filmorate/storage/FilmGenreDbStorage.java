@@ -20,7 +20,7 @@ public class FilmGenreDbStorage implements FilmGenreStorage {
     @Override
     public void add(long filmId, long genreId) {
         String sql = "insert into FILM_GENRE(FILM_ID, GENRE_ID) " +
-                "VALUES (?, ?)";
+                "values (?, ?)";
         if (jdbcTemplate.update(sql, filmId, genreId) == 0) throw new StorageException(
                 String.format("Ошибка при добавлении в БД FILM_GENRE, filmID=%s, genreID=%s.", filmId, genreId));
     }

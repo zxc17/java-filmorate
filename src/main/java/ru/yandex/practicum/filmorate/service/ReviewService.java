@@ -105,7 +105,7 @@ public class ReviewService {
      * @param isLike Флаг t/t - лайк/дизлайк
      * @return Отзыв с обновленной оценкой.
      */
-    public Review changeUseful(Long id, Long userId, boolean isAdd, boolean isLike) {
+    public Review changeUsefulness(Long id, Long userId, boolean isAdd, boolean isLike) {
         Review review = reviewStorage.get(id);
         if (review == null) throw new ValidationNotFoundException(String
                 .format("reviewId=%s не найден.", id));

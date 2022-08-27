@@ -101,10 +101,10 @@ public class ReviewDbStorage implements ReviewStorage {
     @Override
     public Map<Review, Boolean> getReviewListByUser(Long userId) {
         String sql = "" +
-                "select R.*, RL.IS_POSITIVE as IS_LIKE " +
-                "from REVIEWS R " +
-                "join REVIEW_LIKES RL on R.REVIEW_ID = RL.REVIEW_ID " +
-                "where RL.USER_ID = ?";
+                "select REVIEWS.*, REVIEW_LIKES.IS_POSITIVE as IS_LIKE " +
+                "from REVIEWS " +
+                "join REVIEW_LIKES on REVIEWS.REVIEW_ID = REVIEW_LIKES.REVIEW_ID " +
+                "where REVIEW_LIKES.USER_ID = ?";
         SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, userId);
         Map<Review, Boolean> result = new HashMap<>();
         while (rowSet.next()) {

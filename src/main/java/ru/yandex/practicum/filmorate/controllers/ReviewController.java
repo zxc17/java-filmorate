@@ -55,24 +55,24 @@ public class ReviewController {
     @PutMapping("/reviews/{id}/like/{userId}")
     public Review addLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Начато выполнение \"Добавить лайк отзыву\".");
-        return reviewService.changeUseful(id, userId, true, true);
+        return reviewService.changeUsefulness(id, userId, true, true);
     }
 
     @PutMapping("/reviews/{id}/dislike/{userId}")
     public Review addDisLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Начато выполнение \"Добавить дизлайк отзыву\".");
-        return reviewService.changeUseful(id, userId, true, false);
+        return reviewService.changeUsefulness(id, userId, true, false);
     }
 
     @DeleteMapping("/reviews/{id}/like/{userId}")
     public Review removeLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Начато выполнение \"Удалить лайк отзыву\".");
-        return reviewService.changeUseful(id, userId, false, true);
+        return reviewService.changeUsefulness(id, userId, false, true);
     }
 
     @DeleteMapping("/reviews/{id}/dislike/{userId}")
     public Review removeDislike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Начато выполнение \"Удалить дизлайк отзыву\".");
-        return reviewService.changeUseful(id, userId, false, false);
+        return reviewService.changeUsefulness(id, userId, false, false);
     }
 }

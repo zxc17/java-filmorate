@@ -17,7 +17,7 @@ public class FriendsDbStorage implements FriendsStorage {
 
     @Override
     public void add(long userId, long friendId) {
-        String sql = "insert into FRIENDS (user_id, friend_id) VALUES ( ?, ? )";
+        String sql = "insert into FRIENDS (user_id, friend_id) values ( ?, ? )";
         if (jdbcTemplate.update(sql, userId, friendId) == 0) throw new StorageException(
                 String.format("Ошибка при добавлении в БД FRIENDS, userID=%s, friendID=%s.", userId, friendId));
     }
