@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FilmGenreDbStorage implements FilmGenreStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final DbStorageUtil dbStorageUtil;
 
     @Override
     public void add(long filmId, long genreId) {

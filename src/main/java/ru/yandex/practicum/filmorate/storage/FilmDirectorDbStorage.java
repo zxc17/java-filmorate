@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FilmDirectorDbStorage implements FilmDirectorStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final DbStorageUtil dbStorageUtil;
 
     @Override
     public List<Long> getDirectorByFilm(long filmId) {

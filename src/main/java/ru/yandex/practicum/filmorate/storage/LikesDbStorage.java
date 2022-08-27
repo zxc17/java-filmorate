@@ -16,6 +16,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class LikesDbStorage implements LikesStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final DbStorageUtil dbStorageUtil;
 
     @Override
     public void put(long filmId, long userId, int rate) {
