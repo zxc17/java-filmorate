@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.customExceptions.StorageException;
 import ru.yandex.practicum.filmorate.model.Director;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class DirectorDbStorage implements DirectorStorage {
     private final JdbcTemplate jdbcTemplate;
@@ -57,7 +57,8 @@ public class DirectorDbStorage implements DirectorStorage {
 
     @Override
     public int update(Director d) {
-        String sql = "update DIRECTORS " +
+        String sql = "" +
+                "update DIRECTORS " +
                 "set DIRECTOR_NAME = ? " +
                 "where DIRECTOR_ID = ?";
         return jdbcTemplate.update(sql, d.getName(), d.getId());

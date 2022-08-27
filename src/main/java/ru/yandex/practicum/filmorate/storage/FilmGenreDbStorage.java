@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.customExceptions.StorageException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -12,15 +12,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
+@Repository
 @RequiredArgsConstructor
 public class FilmGenreDbStorage implements FilmGenreStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final DbStorageUtil dbStorageUtil;
 
     @Override
     public void add(long filmId, long genreId) {
         String sql = "insert into FILM_GENRE(FILM_ID, GENRE_ID) " +
-                "VALUES (?, ?)";
+                "values (?, ?)";
         if (jdbcTemplate.update(sql, filmId, genreId) == 0) throw new StorageException(
                 String.format("Ошибка при добавлении в БД FILM_GENRE, filmID=%s, genreID=%s.", filmId, genreId));
     }

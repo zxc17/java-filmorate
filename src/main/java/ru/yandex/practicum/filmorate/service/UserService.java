@@ -10,8 +10,9 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.OperationType;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.FriendsStorage;
-import ru.yandex.practicum.filmorate.storage.LikesDbStorage;
+import ru.yandex.practicum.filmorate.storage.LikesStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
@@ -27,9 +28,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserService {
     private final UserStorage userStorage;
+    private final FilmStorage filmStorage;
+    private final LikesStorage likesStorage;
     private final FriendsStorage friendsStorage;
     private final EventStorage eventStorage;
-    private final LikesDbStorage likesDbStorage;
     private final FilmService filmService;
     private final ReviewService reviewService;
 
@@ -68,7 +70,9 @@ public class UserService {
         if (userStorage.get(id) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", id));
         reviewService.updateUsefulForRemoveUser(id);
+        List<Long> filmIds = likesStorage.getIdFilmsRatedByUser(id);
         userStorage.remove(id);
+        filmService.updateRateForFilmList(filmIds);
     }
 
     public void clear() {
@@ -116,28 +120,30 @@ public class UserService {
     }
 
     public List<Film> getRecommendation(long userId) {
-        // Для каждого юзера создается мапа фильм-оценка.
-        Map<User, Map<Film, Double>> data = new HashMap<>();
+        // Для каждого юзера выбираем фильмы с оценкой.
+        Map<User, List<Film>> data = new HashMap<>();
         List<User> userList = userStorage.getAll();
         // Заполнение данных.
-        userList.forEach(u -> data.put(u, likesDbStorage.getLikeListByUser(u.getId())));
-        // Вычленяем данные обрабатываемого юзера.
+        userList.forEach(u -> data.put(u, filmStorage.getRatedFilmListByUser(u.getId())));
+        // Вычленяем данные проверяемого юзера.
         User user = userStorage.get(userId);
-        Map<Film, Double> userData = data.get(user);
+        List<Film> userData = data.get(user);
         // Убираем его из общей базы.
         data.remove(user);
 
         // Приступаем к обработке.
-        // Мапа, сортированнная по количеству совпадений оценок, в порядке убывания.
-        Map<Long, Map<Film, Double>> nearestUsersData = new TreeMap<>(
+        // nearestUsersData - мапа, сортированнная по количеству совпадений оценок, в порядке убывания.
+        Map<Long, List<Film>> nearestUsersData = new TreeMap<>(
                 Comparator.comparingLong((Long k) -> k).reversed());
-        for (Map.Entry<User, Map<Film, Double>> entryData : data.entrySet()) {
+        for (Map.Entry<User, List<Film>> entryData : data.entrySet()) {
             long amountOfHit = 0;
-            for (Map.Entry<Film, Double> entryFilmsForCheckedUser : entryData.getValue().entrySet()) {
+            for (Film checkedFilmForCurrentUser : entryData.getValue()) {
                 // Ищем совпадение оценок.
-                // На данном этапе есть только лайки, т.е. в поле Double может быть лишь единица,
-                // поэтому просто проверяем наличие.
-                if (userData.containsKey(entryFilmsForCheckedUser.getKey()))
+                // Первое условие: у проверяемого юзера есть оценка того же фильма, что и у итерируемого.
+                // Второе условие: разница оценок не больше 1.
+                if (userData.contains(checkedFilmForCurrentUser)
+                        && Math.abs(userData.get(userData.indexOf(checkedFilmForCurrentUser)).getRate()
+                        - checkedFilmForCurrentUser.getRate()) <= 1)
                     amountOfHit++;
             }
             // Данные пользователя, у которого есть совпадения, сохраняем. Ключ - кол-во совпадений.
@@ -145,17 +151,17 @@ public class UserService {
                 nearestUsersData.put(amountOfHit, entryData.getValue());
         }
         List<Film> result = new ArrayList<>();
-        // Ищем фильмы с лайками, которые есть у ближайшего юзера, но не у проверяемого,
+        // Ищем фильмы с положительными оценками, которые есть у ближайшего юзера, но не у проверяемого,
         // начиная с фильмов юзера с максимальным совпадением.
-        for (Map.Entry<Long, Map<Film, Double>> e : nearestUsersData.entrySet()) {
-            for (Map.Entry<Film, Double> entry : e.getValue().entrySet()) {
-                if (!userData.containsKey(entry.getKey()))
-                    result.add(entry.getKey());
+        for (Map.Entry<Long, List<Film>> e : nearestUsersData.entrySet()) {
+            for (Film f : e.getValue()) {
+                if (f.getRate() > 5 && !userData.contains(f))
+                    result.add(f);
             }
             // Если нашли рекомендации, то выходим. Нет - переходим к списку фильмов следующего юзера.
             if (result.size() > 0) break;
         }
-        filmService.loadDataIntoFilm(result);
+        filmService.loadDataIntoFilms(result);
         return result;
     }
 

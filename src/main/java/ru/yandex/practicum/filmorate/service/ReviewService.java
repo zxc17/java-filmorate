@@ -96,71 +96,58 @@ public class ReviewService {
         reviewStorage.clear();
     }
 
-    public Review changeUseful(Long id, Long userId, boolean toAdd, boolean isLike) {
-        if (userStorage.get(userId) == null)
-            throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
-
+    /**
+     * Пересчитывает оценку полезности отзыва.
+     *
+     * @param id     ID отзыва
+     * @param userId ID юзера добавляющего/удаляющего оценку.
+     * @param isAdd  Флаг t/f - добавление/удаление.
+     * @param isLike Флаг t/t - лайк/дизлайк
+     * @return Отзыв с обновленной оценкой.
+     */
+    public Review changeUsefulness(Long id, Long userId, boolean isAdd, boolean isLike) {
         Review review = reviewStorage.get(id);
         if (review == null) throw new ValidationNotFoundException(String
                 .format("reviewId=%s не найден.", id));
+        if (userStorage.get(userId) == null) throw new ValidationNotFoundException(String
+                .format("userId=%s не найден.", userId));
 
-        List<Long> userLikes = reviewLikesStorage.getUserLikes(userId);
-        List<Long> userDislikes = reviewLikesStorage.getUserDislikes(userId);
-
-        if (toAdd)          // добавить оценку
-            if (isLike) {   // лайк
-                if (userLikes.contains(id)) throw new ValidationDataException(String
-                        .format("userId=%s уже поставил лайк reviewId=%s.", userId, id));
-
-                // изменение оценки с дизлайка на лайк
-                if (userDislikes.contains(id)) {
-                    reviewLikesStorage.remove(id, userId);
-                    review.setUseful(review.getUseful() + 1);
-                }
-
-                reviewLikesStorage.add(id, userId, isLike);
-                review.setUseful(review.getUseful() + 1);
-            } else {        // дизлайк
-                if (userDislikes.contains(id)) throw new ValidationDataException(String
-                        .format("userId=%s уже поставил дизлайк reviewId=%s.", userId, id));
-
-                // изменение оценки с лайка на дизлайк
-                if (userLikes.contains(id)) {
-                    reviewLikesStorage.remove(id, userId);
-                    review.setUseful(review.getUseful() - 1);
-                }
-
-                reviewLikesStorage.add(id, userId, isLike);
-                review.setUseful(review.getUseful() - 1);
+        // k - величина изменения оценки.
+        // Если раньше оценки не было, то он равен 1.
+        // Если была противоположная, то равен 2.
+        // oldIsLike значение предыдущей оценки.
+        Boolean oldIsLike = reviewLikesStorage.getReviewLikeByUser(id, userId);
+        int k = (isLike) ? 1 : -1;
+        if (isAdd) {                                    // Добавление или изменение оценки.
+            if (oldIsLike != null)                      // Если оценка уже есть:
+                if (oldIsLike ^ isLike)                 // Сравниваем старую и новую оценки:
+                    k *= 2;                             // Если противоположные, то k удваивается.
+                else
+                    return review;                      // Если одинаковые, то ничего не надо делать.
+            else {                                      // Если раньше оценки не было:
+                // NOP                                  // k остаётся равным 1.
             }
-        else                // удалить оценку
-            if (isLike) {   // лайк
-                if (userDislikes.contains(id)) throw new ValidationDataException(String
-                        .format("userId=%s поставил дизлайк reviewId=%s, а не лайк.", userId, id));
-                if (!userLikes.contains(id)) throw new ValidationDataException(String
-                        .format("userId=%s не поставил лайк reviewId=%s.", userId, id));
-
-                reviewLikesStorage.remove(id, userId);
-                review.setUseful(review.getUseful() - 1);
-            } else {        // дизлайк
-                if (userLikes.contains(id)) throw new ValidationDataException(String
-                        .format("userId=%s поставил лайк reviewId=%s, а не дизлайк.", userId, id));
-                if (!userDislikes.contains(id)) throw new ValidationDataException(String
-                        .format("userId=%s не поставил дизлайк reviewId=%s.", userId, id));
-
-                reviewLikesStorage.remove(id, userId);
-                review.setUseful(review.getUseful() + 1);
-            }
+            reviewLikesStorage.put(id, userId, isLike);
+        } else {                                        // Удаление оценки.
+            if (oldIsLike == null) throw new ValidationNotFoundException(String
+                    .format("Пользователь userID=%s не оценивал отзыв reviewID=%s.", userId, id));
+            else if (oldIsLike ^ isLike) throw new ValidationNotFoundException(String
+                    .format("Невозможно обработать запрос на удаление оценки отзыва " +
+                            "reviewID=%s пользователем userID=%s. " +
+                            "Несовпадение установленной и запрашиваемой оценок.", id, userId));
+            k = -k; // Удаляем лайк - полезность уменьшается.
+            reviewLikesStorage.remove(id, userId);
+        }
+        review.setUseful(review.getUseful() + k);
         return reviewStorage.update(review, 1);
     }
 
-    public void updateUsefulForRemoveUser(Long userId) {
-        reviewLikesStorage.getUserLikes(userId).stream()
-                .map(reviewStorage::get)
-                .forEach(review -> review.setUseful(review.getUseful() - 1));
-        reviewLikesStorage.getUserDislikes(userId).stream()
-                .map(reviewStorage::get)
-                .forEach(review -> review.setUseful(review.getUseful() + 1));
+    void updateUsefulForRemoveUser(Long userId) {
+        reviewStorage.getReviewListByUser(userId).forEach((review, isLike) -> {
+            int k = (isLike) ? 1 : -1;
+            review.setUseful(review.getUseful() - k);
+            reviewStorage.update(review, 1);
+        });
         // Удаление самих записей из базы выполнится каскадно при удалении пользователя.
     }
 

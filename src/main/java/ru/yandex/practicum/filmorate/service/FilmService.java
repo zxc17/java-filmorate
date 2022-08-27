@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.customExceptions.ValidationNotFoundExceptio
 import ru.yandex.practicum.filmorate.model.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.OperationType;
+import ru.yandex.practicum.filmorate.model.Rate;
 import ru.yandex.practicum.filmorate.storage.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.EventStorage;
 import ru.yandex.practicum.filmorate.storage.FilmDirectorStorage;
@@ -37,34 +38,23 @@ public class FilmService {
 
     public Film add(Film f) {
         if (isInvalidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");
-        // Чтобы в возврате было всё корректно, прописываем mpa_name
-        if (f.getMpa().getName() == null)
-            f.setMpa(mpaStorage.get(f.getMpa().getId()));
         filmStorage.add(f);
-        if (f.getGenres() != null && !f.getGenres().isEmpty()) {
-            filmGenreStorage.update(f.getId(), f.getGenres());
-            // Чтобы в возврате было всё корректно, прописываем genre_name
-            f.setGenres(genreStorage.getNames(f.getGenres()));
-        }
-        if (f.getDirectors() != null && !f.getDirectors().isEmpty()) {
-            filmDirectorStorage.updateDirectorByFilm(f.getId(), f.getDirectors());
-            f.setDirectors(directorStorage.getNames(f.getDirectors()));
-        }
+        storeAdditionalFields(f);
+        // Чтобы в возврате было всё корректно, прописываем mpa_name, genre_name, director_name
+        loadDataIntoFilm(f);
         return f;
     }
 
     public Film get(long filmId) {
         Film film = filmStorage.get(filmId);
         if (film == null) throw new ValidationNotFoundException(String.format("filmId=%s не найден.", filmId));
-        List<Film> films = new ArrayList<>();
-        films.add(film);
-        loadDataIntoFilm(films);
-        return films.get(0);
+        loadDataIntoFilm(film);
+        return film;
     }
 
     public List<Film> getAll() {
         List<Film> result = filmStorage.getAll();
-        loadDataIntoFilm(result);
+        loadDataIntoFilms(result);
         return result;
     }
 
@@ -72,17 +62,10 @@ public class FilmService {
         if (isInvalidFilm(f)) throw new ValidationDataException("Некорректные данные фильма.");
         if (filmStorage.get(f.getId()) == null) throw new ValidationNotFoundException(
                 String.format("Невозможно обновить данные фильма, id=%s не найден.", f.getId()));
-        // Чтобы в возврате было всё корректно, прописываем mpa_name
-        if (f.getMpa().getName() == null)
-            f.setMpa(mpaStorage.get(f.getMpa().getId()));
         filmStorage.update(f);
-        if (f.getGenres() != null)
-            filmGenreStorage.update(f.getId(), f.getGenres());
-        if (f.getDirectors() != null) {
-            filmDirectorStorage.updateDirectorByFilm(f.getId(), f.getDirectors());
-        } else {
-            filmDirectorStorage.clearDirectorByFilm(f.getId());
-        }
+        storeAdditionalFields(f);
+        // Чтобы в возврате было всё корректно, прописываем mpa_name, genre_name, director_name
+        loadDataIntoFilm(f);
         return f;
     }
 
@@ -96,17 +79,16 @@ public class FilmService {
         filmStorage.clear();
     }
 
-    public void addLike(long filmId, long userId) {
+    public void putLike(long filmId, long userId, Integer rate) {
         if (filmStorage.get(filmId) == null)
             throw new ValidationNotFoundException(String.format("filmId=%s не найден.", filmId));
         if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
-        likesStorage.add(filmId, userId);
+        if (isInvalidRate(Double.valueOf(rate)))
+            throw new ValidationNotFoundException(String.format("Некорректное значение rate=%s.", rate));
+        likesStorage.put(filmId, userId, rate);
+        filmStorage.updateRate(filmId, filmStorage.calculateRate(filmId));
         eventStorage.addEvent(userId, filmId, EventType.LIKE, OperationType.ADD);
-    }
-
-    public long getLikeCount(long id) {
-        return likesStorage.get(id).size();
     }
 
     public void removeLike(long filmId, long userId) {
@@ -115,6 +97,7 @@ public class FilmService {
         if (userStorage.get(userId) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", userId));
         likesStorage.remove(filmId, userId);
+        filmStorage.updateRate(filmId, filmStorage.calculateRate(filmId));
         eventStorage.addEvent(userId, filmId, EventType.LIKE, OperationType.REMOVE);
     }
 
@@ -145,7 +128,7 @@ public class FilmService {
             filmList = filmStorage.getPopularFilms(count);
         }
 
-        loadDataIntoFilm(filmList);
+        loadDataIntoFilms(filmList);
         return filmList;
     }
 
@@ -162,7 +145,7 @@ public class FilmService {
             throw new ValidationDataException(String
                     .format("Сортирока может быть только по year и likes. Указана сортировка = %s", sort));
         }
-        loadDataIntoFilm(result);
+        loadDataIntoFilms(result);
         return result;
     }
 
@@ -172,7 +155,7 @@ public class FilmService {
         if (userStorage.get(user2Id) == null)
             throw new ValidationNotFoundException(String.format("userId=%s не найден.", user2Id));
         List<Film> result = filmStorage.getCommonFilms(user1Id, user2Id);
-        loadDataIntoFilm(result);
+        loadDataIntoFilms(result);
         return result;
     }
 
@@ -192,20 +175,45 @@ public class FilmService {
             filmList = filmStorage.searchFilmByTitle(query);
         }
 
-        loadDataIntoFilm(filmList);
+        loadDataIntoFilms(filmList);
         return filmList;
     }
 
-    void loadDataIntoFilm(List<Film> films) {
-        films.forEach(film -> {
-            film.setGenres(filmGenreStorage.get(film.getId()).stream()
-                    .map(genreStorage::get)
-                    .collect(Collectors.toSet()));
-            film.setLikes(likesStorage.get(film.getId()));
-            film.setDirectors(filmDirectorStorage.getDirectorByFilm(film.getId()).stream()
-                    .map(directorStorage::getById)
-                    .collect(Collectors.toSet()));
-        });
+    void updateRateForFilmList(List<Long> filmIds) {
+        filmIds.forEach(filmId -> filmStorage.updateRate(filmId, filmStorage.calculateRate(filmId)));
+    }
+
+    void loadDataIntoFilm(Film f) {
+        if (f.getMpa().getName() == null)
+            f.setMpa(mpaStorage.get(f.getMpa().getId()));
+        f.setGenres(filmGenreStorage.get(f.getId()).stream()
+                .map(genreStorage::get)
+                .collect(Collectors.toSet()));
+        f.setLikes(likesStorage.get(f.getId()));
+        f.setDirectors(filmDirectorStorage.getDirectorByFilm(f.getId()).stream()
+                .map(directorStorage::getById)
+                .collect(Collectors.toSet()));
+    }
+
+    void loadDataIntoFilms(List<Film> films) {
+        films.forEach(this::loadDataIntoFilm);
+    }
+
+    private void storeAdditionalFields(Film f) {
+        if (f.getGenres() != null)
+            filmGenreStorage.update(f.getId(), f.getGenres());
+        if (f.getLikes() != null) {
+            double rate = f.getLikes().stream().mapToDouble(Rate::getRate)
+                    .average().orElse(0.0);
+            f.setRate(rate);
+            likesStorage.update(f.getId(), f.getLikes());
+            filmStorage.updateRate(f.getId(), rate);
+        }
+        if (f.getDirectors() != null) {
+            filmDirectorStorage.updateDirectorByFilm(f.getId(), f.getDirectors());
+        } else {
+            filmDirectorStorage.clearDirectorByFilm(f.getId());
+        }
     }
 
     private boolean isInvalidFilm(Film f) {
@@ -221,7 +229,13 @@ public class FilmService {
                 f.getDuration() <= 0
         )
             return true;
-        else
-            return false;
+        else if (f.getLikes() != null) {
+            return f.getLikes().stream().anyMatch(r -> isInvalidRate(r.getRate()));
+        }
+        return false;
+    }
+
+    private boolean isInvalidRate(Double rate) {
+        return  (rate == null || rate < 1 || rate > 10);
     }
 }

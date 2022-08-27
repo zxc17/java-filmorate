@@ -33,8 +33,9 @@ public class Film {
     private long duration;
     @NotNull
     private Mpa mpa;
+    private double rate;
     private Set<Genre> genres; //Может отсутствовать.
-    private Set<Long> likes;
+    private Set<Rate> likes;
     private Set<Director> directors;
 
 }
